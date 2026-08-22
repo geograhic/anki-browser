@@ -13,6 +13,11 @@ export async function loadDeckIndex(): Promise<DeckMeta[]> {
 }
 
 export async function loadDeckMarkdown(deck: DeckMeta): Promise<string> {
+  // Inline `content` (owner-edited via the deck editor) takes priority; the
+  // legacy per-deck `markdown` file is still supported as a fallback.
+  if (typeof deck.content === 'string' && deck.content.trim()) {
+    return renderMarkdown(deck.content);
+  }
   if (!deck.markdown) return '';
   const res = await fetch(BASE + 'decks/' + deck.markdown, { cache: 'no-cache' });
   if (!res.ok) return '';

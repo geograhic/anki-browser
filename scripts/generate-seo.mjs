@@ -33,7 +33,7 @@ import {
 } from '../src/content/render.mjs';
 
 // Deck metadata shape (mirrors DeckMeta in src/content/render.d.mts).
-/** @typedef {{ slug:string, title:string, subtitle?:string, description?:string, tags?:string[], cover?:string, downloads?:{url:string,label?:string,note?:string}[], baiduLink?:string, previewFile?:string, markdown?:string, featured?:boolean, updated?:string }} DeckMeta */
+/** @typedef {{ slug:string, title:string, subtitle?:string, description?:string, tags?:string[], cover?:string, downloads?:{url:string,label?:string,note?:string}[], baiduLink?:string, content?:string, markdown?:string, previewFile?:string, featured?:boolean, updated?:string }} DeckMeta */
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = resolve(root, 'dist');
@@ -134,8 +134,14 @@ writePage(
 
 /* ---- Per-deck pages ---- */
 for (const deck of decks) {
-  const md = deck.markdown ? readFileSync(resolve(publicDir, 'decks', deck.markdown), 'utf8') : '';
-  const mdHtml = md ? renderMarkdown(md) : '';
+  // Inline `content` wins; legacy per-deck .md file is the fallback.
+  const mdSource =
+    typeof deck.content === 'string' && deck.content.trim()
+      ? deck.content
+      : deck.markdown
+        ? readFileSync(resolve(publicDir, 'decks', deck.markdown), 'utf8')
+        : '';
+  const mdHtml = mdSource ? renderMarkdown(mdSource) : '';
   const inner =
     siteHeaderHtml({ active: 'home', links: seoLinks }) +
     deckArticleHtml(deck, mdHtml, seoLinks) +

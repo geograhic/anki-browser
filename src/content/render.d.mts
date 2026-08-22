@@ -20,8 +20,11 @@ export interface DeckMeta {
   /** One or more download sources. Legacy `baiduLink` string is also accepted. */
   downloads?: DownloadLink[];
   baiduLink?: string;
-  previewFile?: string;
+  /** Inline Markdown intro text (owner-edited). Takes priority over `markdown`. */
+  content?: string;
+  /** Legacy: name of a per-deck .md file under public/decks/. */
   markdown?: string;
+  previewFile?: string;
   featured?: boolean;
   updated?: string;
 }

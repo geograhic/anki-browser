@@ -9,7 +9,7 @@
     "cover": "",
     "downloads": [],
     "previewFile": "",
-    "markdown": "li-vocabulary.md",
+    "content": "# Li's Vocabulary\n\nA personal, hand-curated collection of **English \u2194 Chinese** vocabulary and example\nsentences. It is used daily for sentence mining and spaced-repetition review.\n\n## What's inside\n\n- **Basic** cards (word on the front, definition + example on the back)\n- **Cloze-deletion** cards for full-sentence recall\n- Tagged by topic so you can filter what you study\n- Audio and images embedded directly in the package\n\n## How to use this deck\n\n1. **Download** the package using the download link on this page.\n2. **Open** it in your browser \u2014 no account, no upload, nothing leaves your device.\n3. **Browse or review** with the built-in reviewer, or just flip through the cards.\n\n> Everything runs locally in your browser. Your review progress is saved on *this*\n> device only, so you can close the tab and pick up where you left off.\n\n## Download\n\nThe full deck (`Li's Vocabulary-20260204154204_\u6807\u672c.apkg`, ~30 MB) is shared via a\ndownload link on this page. After downloading, click **Open local file** in the\nreviewer to load it \u2014 no Anki software needed.",
     "featured": true,
     "updated": "2026-02-04"
   },
@@ -23,7 +23,7 @@
     "cover": "",
     "downloads": [],
     "previewFile": "decks/files/sample-basic.apkg",
-    "markdown": "sample-basic.md",
+    "content": "# Sample Deck\n\nThis is a tiny demonstration deck bundled with the site. Use it to try the reviewer\ninstantly \u2014 no download required.\n\n## What's inside\n\n- A couple of **Basic** cards (front/back)\n- One **Cloze** card (fill-in-the-blank)\n- An embedded image, to show that media renders inline\n\n## Try it\n\nClick **Open in reviewer** on this page. The deck loads straight from the site, and\nyou can answer the cards with the four rating buttons just like a real Anki session.\n\n> Progress on the sample deck is also saved locally on your device.",
     "featured": false,
     "updated": "2026-08-22"
   }
