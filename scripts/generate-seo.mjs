@@ -33,7 +33,7 @@ import {
 } from '../src/content/render.mjs';
 
 // Deck metadata shape (mirrors DeckMeta in src/content/render.d.mts).
-/** @typedef {{ slug:string, title:string, subtitle?:string, description?:string, tags?:string[], cover?:string, baiduLink?:string, previewFile?:string, markdown?:string, featured?:boolean, updated?:string }} DeckMeta */
+/** @typedef {{ slug:string, title:string, subtitle?:string, description?:string, tags?:string[], cover?:string, downloads?:{url:string,label?:string,note?:string}[], baiduLink?:string, previewFile?:string, markdown?:string, featured?:boolean, updated?:string }} DeckMeta */
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = resolve(root, 'dist');

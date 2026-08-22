@@ -60,7 +60,13 @@
   "tags": ["English", "Vocabulary"],
   "language": "en",
   "cover": "",
-  "baiduLink": "https://pan.baidu.com/s/1xxxxxxxxx",
+  "downloads": [
+    {
+      "url": "https://pan.baidu.com/s/1xxxxxxxxx",
+      "label": "百度网盘",
+      "note": "提取码: abcd"
+    }
+  ],
   "previewFile": "",
   "markdown": "my-vocab.md",
   "featured": false,
@@ -79,17 +85,35 @@
 | `tags` | 标签数组，显示为蓝色 chip | 选填 |
 | `language` | BCP-47 语言码（`en` / `zh-CN` …） | 选填 |
 | `cover` | 自定义封面图 URL（留空就用首字母渐变） | 选填 |
-| `baiduLink` | **百度网盘分享链接**（这就是"下载"按钮指向的地方） | 强烈建议 |
-| `previewFile` | 想让用户**直接在线试看**的 `.apkg` 路径（相对 `public/`） | 选填 |
+| `downloads` | **下载来源数组**，每个元素 `{ url, label?, note? }` | 强烈建议 |
+| `previewFile` | 想让用户**直接在线浏览/试看**的 `.apkg` 路径（相对 `public/`） | 选填 |
 | `markdown` | 介绍 Markdown 文件名（默认用 slug） | 选填 |
 | `featured` | 是否在首页置顶（仅一个，建议留给最重要的） | 选填 |
 | `updated` | 更新日期 `YYYY-MM-DD`，影响 sitemap `lastmod` | 选填 |
 
-`baiduLink` 和 `previewFile` 至少填一个：
+### `downloads` — 下载来源（不限于百度网盘）
 
-- 填了 `baiduLink`：页面显示 **"Download via Baidu Netdisk"** 按钮
-- 填了 `previewFile`：页面显示 **"Open in reviewer"** 按钮（访客直接试看，不用下载）
-- 两个都填：两个按钮都显示
+`downloads` 是数组，可以放**任意形式**的下载链接：百度网盘、阿里云盘、GitHub Release、
+蓝奏云、直链 CDN…… 每个元素：
+
+```json
+{ "url": "https://...", "label": "百度网盘", "note": "提取码: abcd" }
+```
+
+- `url`：下载链接（必填）
+- `label`：按钮文字，会显示为 **"Download via {label}"**（例如 "Download via 百度网盘"）
+- `note`：可选小字备注，比如百度网盘提取码、文件大小等
+
+放多个就显示多个下载按钮。第一个会在"只有下载、没有在线预览"时变成主按钮。
+
+> 兼容旧字段：如果只写了 `"baiduLink": "https://..."`，站点会自动当作一个
+> label 为 "百度网盘" 的下载来源，无需迁移。
+
+`downloads` 和 `previewFile` 至少配一个：
+
+- 填了 `downloads`：页面显示对应的 **"Download via …"** 按钮
+- 填了 `previewFile`：页面显示 **"Open in reviewer"** 按钮（访客直接在线浏览/试看，不用下载）
+- 两个都填：先显示在线浏览按钮，再显示下载按钮
 
 ### 4. 构建并部署
 

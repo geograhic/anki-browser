@@ -105,6 +105,11 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   opacity: .55; cursor: not-allowed; pointer-events: none;
 }
 
+/* Download button groups (one or more per deck) */
+.btn-group { display: inline-flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.btn-group .btn { width: 100%; }
+.btn-note { font-size: 12px; color: var(--muted); text-align: center; }
+
 /* ------------------------------- Tags ----------------------------------- */
 .tag, .tag-chip {
   display: inline-block; padding: 2px 9px; font-size: 12.5px; font-weight: 550;
@@ -193,6 +198,20 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 }
 .study-title { font-size: 18px; font-weight: 650; color: var(--ink); }
 .study-meta { font-size: 13.5px; color: var(--muted); }
+
+/* Mode toggle: Browse / Review */
+.mode-toggle { display: inline-flex; border: 1px solid var(--line); background: var(--panel-2); }
+.mode-btn {
+  padding: 6px 14px; font-size: 13.5px; font-weight: 600; color: var(--muted);
+  background: transparent; border: none; cursor: pointer; border-radius: 0;
+}
+.mode-btn:hover { color: var(--ink); }
+.mode-btn.is-active { background: var(--blue); color: #fff; }
+
+/* Browse-mode navigation (Prev / Show Answer / Next) */
+.browse-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.browse-nav { min-width: 96px; }
+.browse-nav[disabled] { opacity: .45; cursor: not-allowed; }
 
 .progress {
   height: 8px; background: var(--line-soft); border: 1px solid var(--line);
@@ -398,6 +417,9 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   .study-topbar { gap: 6px; margin-bottom: 10px; }
   .study-title { font-size: 16px; }
   .study-meta { font-size: 12.5px; }
+  .mode-toggle { margin-left: auto; }
+  .mode-btn { padding: 5px 10px; font-size: 12.5px; }
+  .browse-nav { min-width: 72px; padding: 9px 10px; }
   .card-stage { min-height: 240px; }
   .card-scroll { padding: 20px 18px; }
   .card-side-label { font-size: 11px; margin-bottom: 10px; }

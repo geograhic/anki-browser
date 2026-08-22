@@ -37,6 +37,9 @@ export class StudySession {
   private readonly deckNameById = new Map<number, string>();
   private queue: CardState[] = [];
   private cursor = 0;
+  /** Stable order of every card, used by the Browse mode (no scheduling). */
+  private readonly browseOrder: CardState[] = [];
+  private readonly browsePos = new Map<number, number>();
   answered = 0;
 
   private constructor(
@@ -63,10 +66,17 @@ export class StudySession {
     const savedMap = new Map(saved.map((s) => [s.cardId, s]));
     const session = new StudySession(pkg, media, collection, name, deckKey);
     const now = Date.now();
+    const all: CardState[] = [];
     for (const card of collection.cards) {
       const init = initialState(card, DEFAULT_SCHEDULER_CONFIG, now);
-      session.states.set(card.id, savedMap.get(card.id) ?? init);
+      const state = savedMap.get(card.id) ?? init;
+      session.states.set(card.id, state);
+      all.push(state);
     }
+    // Browse mode: stable order = collection order (same as Anki's card list).
+    all.sort((a, b) => a.cardId - b.cardId);
+    session.browseOrder.push(...all);
+    all.forEach((s, i) => session.browsePos.set(s.cardId, i));
     session.rebuild();
     return session;
   }
@@ -87,6 +97,23 @@ export class StudySession {
     return this.queue[this.cursor] ?? null;
   }
 
+  /* ------------------------- Browse mode (no scheduling) ----------------- */
+
+  get browseTotal(): number {
+    return this.browseOrder.length;
+  }
+
+  /** The card at a fixed position in the deck (browse mode). */
+  browseAt(index: number): CardState | null {
+    return this.browseOrder[index] ?? null;
+  }
+
+  /** Fixed position of a card in the deck (for resuming a browse cursor). */
+  browseIndexOf(cardId: number): number {
+    const i = this.browsePos.get(cardId);
+    return i === undefined ? 0 : i;
+  }
+
   private rebuild(): void {
     const now = Date.now();
     this.queue = buildQueue([...this.states.values()], {
@@ -98,10 +125,8 @@ export class StudySession {
     this.cursor = 0;
   }
 
-  /** Render the current card's question + answer, with media and LaTeX resolved. */
-  renderCurrent(): RenderedCard | null {
-    const st = this.current;
-    if (!st) return null;
+  /** Render any card state (used by both review and browse). */
+  renderState(st: CardState): RenderedCard | null {
     const card = this.cardById.get(st.cardId);
     if (!card) return null;
     const note = this.noteById.get(card.nid);
@@ -121,6 +146,13 @@ export class StudySession {
       answerHtml: this.media.resolveHtml(degradeLatex(res.answer.html)),
       cardId: card.id,
     };
+  }
+
+  /** Render the current card's question + answer, with media and LaTeX resolved. */
+  renderCurrent(): RenderedCard | null {
+    const st = this.current;
+    if (!st) return null;
+    return this.renderState(st);
   }
 
   /** Button labels (next-interval previews) for the current card. */

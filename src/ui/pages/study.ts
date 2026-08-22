@@ -9,7 +9,6 @@ import {
   RATING_HARD,
   RATING_GOOD,
   RATING_EASY,
-  type Rating,
 } from '../../core';
 import type { StudySession } from '../review';
 
@@ -49,10 +48,12 @@ function noSession(): string {
   return `
     <div class="study-wrap">
       <h1>No deck loaded</h1>
-      <p class="muted">Open an <code>.apkg</code> / <code>.colpkg</code> file to start reviewing.</p>
+      <p class="muted">Open an <code>.apkg</code> / <code>.colpkg</code> file to start browsing or reviewing.</p>
       <p><a class="btn btn-primary" href="${appLinks.open()}">Open a file</a></p>
     </div>`;
 }
+
+type Mode = 'browse' | 'review';
 
 function renderSession(outlet: HTMLElement, session: StudySession): void {
   outlet.replaceChildren();
@@ -61,7 +62,13 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
   const topbar = el('div', { class: 'study-topbar' });
   const title = el('div', { class: 'study-title' }, session.name);
   const meta = el('div', { class: 'study-meta' });
-  topbar.append(title, meta);
+
+  // Mode toggle: Browse (flip cards freely) / Review (SM-2 spaced repetition).
+  const toggle = el('div', { class: 'mode-toggle', role: 'group', 'aria-label': 'Study mode' });
+  const browseBtn = el('button', { class: 'mode-btn', type: 'button' }, 'Browse');
+  const reviewBtn = el('button', { class: 'mode-btn', type: 'button' }, 'Review');
+  toggle.append(browseBtn, reviewBtn);
+  topbar.append(title, toggle, meta);
 
   const progress = el('div', { class: 'progress' });
   const progBar = el('span');
@@ -74,40 +81,43 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
   wrap.append(topbar, progress, stage);
   outlet.append(wrap);
 
+  let mode: Mode = 'review';
   let showAnswer = false;
+  let browseCursor = 0;
 
-  function updateMeta(): void {
-    meta.textContent = `${session.remaining} due · ${session.total} cards`;
-    progBar.style.width = session.progress() + '%';
-  }
-
-  function ratingRow(previews: Record<Rating, string>): HTMLElement {
-    const row = el('div', { class: 'rating-row' });
-    const defs = [
-      { rating: RATING_AGAIN, label: 'Again', cls: 'again' },
-      { rating: RATING_HARD, label: 'Hard', cls: 'hard' },
-      { rating: RATING_GOOD, label: 'Good', cls: 'good' },
-      { rating: RATING_EASY, label: 'Easy', cls: 'easy' },
-    ] as const;
-    for (const d of defs) {
-      const btn = el('button', { class: `rating-btn ${d.cls}`, type: 'button' });
-      btn.append(el('span', { class: 'r-label' }, d.label));
-      btn.append(el('span', { class: 'r-delay' }, previews[d.rating] || ''));
-      btn.addEventListener('click', () => {
-        session.answer(d.rating);
-        showCard();
-      });
-      row.append(btn);
-    }
-    return row;
-  }
-
-  function showCard(): void {
+  function setMode(m: Mode): void {
+    mode = m;
     showAnswer = false;
+    browseBtn.classList.toggle('is-active', m === 'browse');
+    reviewBtn.classList.toggle('is-active', m === 'review');
     paint();
   }
 
-  function paint(): void {
+  function updateMeta(): void {
+    if (mode === 'browse') {
+      const shown = browseCursor + 1;
+      meta.textContent = `Card ${shown} / ${session.browseTotal} · Browse`;
+      progBar.style.width = session.browseTotal ? Math.round((shown / session.browseTotal) * 100) + '%' : '0%';
+    } else {
+      meta.textContent = `${session.remaining} due · ${session.total} cards`;
+      progBar.style.width = session.progress() + '%';
+    }
+  }
+
+  function paintCardContent(rendered: { questionHtml: string; answerHtml: string }): void {
+    scroll.innerHTML = `
+      <div class="card-side-label">Question</div>
+      <div class="card-content">${rendered.questionHtml}</div>
+      <div id="answer-area"></div>`;
+    if (showAnswer) {
+      const area = qs('#answer-area', scroll);
+      if (area) {
+        area.innerHTML = `<hr id="answer"><div class="card-side-label">Answer</div><div class="card-content">${rendered.answerHtml}</div>`;
+      }
+    }
+  }
+
+  function paintReview(): void {
     const cur = session.current;
     if (!cur) {
       scroll.innerHTML = `
@@ -137,18 +147,29 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     }
 
     const previews = session.intervalPreviews();
-    scroll.innerHTML = `
-      <div class="card-side-label">Question</div>
-      <div class="card-content">${rendered.questionHtml}</div>
-      <div id="answer-area"></div>`;
-
+    paintCardContent(rendered);
     footer.replaceChildren();
+
     if (showAnswer) {
-      const area = qs('#answer-area', scroll);
-      if (area) {
-        area.innerHTML = `<hr id="answer"><div class="card-side-label">Answer</div><div class="card-content">${rendered.answerHtml}</div>`;
+      const row = el('div', { class: 'rating-row' });
+      const defs = [
+        { rating: RATING_AGAIN, label: 'Again', cls: 'again' },
+        { rating: RATING_HARD, label: 'Hard', cls: 'hard' },
+        { rating: RATING_GOOD, label: 'Good', cls: 'good' },
+        { rating: RATING_EASY, label: 'Easy', cls: 'easy' },
+      ] as const;
+      for (const d of defs) {
+        const btn = el('button', { class: `rating-btn ${d.cls}`, type: 'button' });
+        btn.append(el('span', { class: 'r-label' }, d.label));
+        btn.append(el('span', { class: 'r-delay' }, previews[d.rating] || ''));
+        btn.addEventListener('click', () => {
+          session.answer(d.rating);
+          showAnswer = false;
+          paint();
+        });
+        row.append(btn);
       }
-      footer.append(ratingRow(previews));
+      footer.append(row);
     } else {
       const show = el('button', { class: 'btn btn-primary', type: 'button' }, 'Show Answer');
       show.addEventListener('click', () => {
@@ -162,5 +183,67 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     updateMeta();
   }
 
-  showCard();
+  function paintBrowse(): void {
+    const st = session.browseAt(browseCursor);
+    const total = session.browseTotal;
+    if (!st || total === 0) {
+      scroll.innerHTML = `
+        <div class="study-done">
+          <h2>Nothing to browse</h2>
+          <p class="muted">This deck contains no cards.</p>
+        </div>`;
+      footer.replaceChildren();
+      updateMeta();
+      return;
+    }
+    const rendered = session.renderState(st);
+    if (!rendered) {
+      // Skip unrenderable cards silently while browsing.
+      if (browseCursor < total - 1) {
+        browseCursor++;
+        paintBrowse();
+      }
+      return;
+    }
+
+    paintCardContent(rendered);
+    footer.replaceChildren();
+
+    const row = el('div', { class: 'browse-row' });
+    const prev = el('button', { class: 'btn btn-secondary browse-nav', type: 'button' }, '‹ Prev');
+    const show = el('button', { class: 'btn btn-primary', type: 'button' }, showAnswer ? 'Hide Answer' : 'Show Answer');
+    const next = el('button', { class: 'btn btn-secondary browse-nav', type: 'button' }, 'Next ›');
+    prev.disabled = browseCursor <= 0;
+    next.disabled = browseCursor >= total - 1;
+    prev.addEventListener('click', () => {
+      if (browseCursor > 0) {
+        browseCursor--;
+        showAnswer = false;
+        paint();
+      }
+    });
+    next.addEventListener('click', () => {
+      if (browseCursor < total - 1) {
+        browseCursor++;
+        showAnswer = false;
+        paint();
+      }
+    });
+    show.addEventListener('click', () => {
+      showAnswer = !showAnswer;
+      paint();
+    });
+    row.append(prev, show, next);
+    footer.append(row);
+    updateMeta();
+  }
+
+  function paint(): void {
+    if (mode === 'browse') paintBrowse();
+    else paintReview();
+  }
+
+  browseBtn.addEventListener('click', () => setMode('browse'));
+  reviewBtn.addEventListener('click', () => setMode('review'));
+  setMode('review');
 }

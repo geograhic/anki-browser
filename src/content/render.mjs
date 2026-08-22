@@ -12,9 +12,10 @@
 
 export const SITE_URL = 'https://apps.endril.com/anki-browser';
 export const SITE_TITLE = 'Anki Browser';
-export const SITE_TAGLINE = 'Open Anki decks in your browser. Review offline, no account, nothing uploaded.';
+export const SITE_TAGLINE =
+  'Browse and review Anki decks right in your browser — no Anki software to install, no account, and your files never leave your device.';
 export const SITE_DESCRIPTION =
-  'Upload an .apkg or .colpkg Anki deck and review it right in your browser. Full spaced-repetition scheduler, media and cloze support, and local-only progress — your data never leaves your device.';
+  'Open, browse and review .apkg / .colpkg Anki decks in your browser — no registration, no Anki software required. Spaced-repetition scheduler, media and cloze support, local-only progress. Your data never leaves your device.';
 export const SITE_KEYWORDS = [
   'Anki',
   'Anki browser',
@@ -23,8 +24,10 @@ export const SITE_KEYWORDS = [
   'SM-2',
   '.apkg',
   '.colpkg',
-  'review offline',
-  'browser-based Anki',
+  'browse Anki online',
+  'review without Anki',
+  'no account',
+  'no registration',
   'open Anki in browser',
   'no upload',
   'private',
@@ -233,26 +236,40 @@ export function decksGalleryHtml(decks, links = seoLinks) {
 /* Deck article (intro + download / study actions)                            */
 /* -------------------------------------------------------------------------- */
 
+/** Normalize a deck's download sources: legacy `baiduLink` string -> one entry. */
+function deckDownloads(deck) {
+  const list = Array.isArray(deck.downloads) ? deck.downloads : [];
+  const legacy = typeof deck.baiduLink === 'string' && deck.baiduLink
+    ? [{ url: deck.baiduLink, label: '百度网盘' }]
+    : [];
+  return [...list, ...legacy];
+}
+
+function downloadButtonHtml(dl, primary = false) {
+  const label = dl.label ? `Download via ${dl.label}` : 'Download';
+  const note = dl.note ? `<span class="btn-note">${escapeHtml(dl.note)}</span>` : '';
+  return `<span class="btn-group">` +
+    `<a class="btn ${primary ? 'btn-primary' : 'btn-secondary'}" href="${escapeAttr(dl.url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>` +
+    `${note}</span>`;
+}
+
 export function deckArticleHtml(deck, mdHtml, links = seoLinks) {
   // Button priority:
-  //   - previewFile + baiduLink : preview is primary, Baidu is secondary
+  //   - previewFile + downloads : preview is primary, downloads secondary
   //     (let the visitor try it first, then download the full deck)
-  //   - only baiduLink           : Baidu is primary (they MUST download first),
+  //   - only downloads          : first download is primary (they MUST download first),
   //                                "Open local file" is secondary
-  //   - only previewFile         : preview is primary, "Open local file" is secondary
-  //   - neither                  : "Open local file" primary, Baidu slot disabled
+  //   - only previewFile        : preview is primary, "Open local file" is secondary
+  //   - neither                 : "Open local file" primary, disabled download slot
   const hasPreview = !!deck.previewFile;
-  const hasBaidu = !!deck.baiduLink;
+  const downloads = deckDownloads(deck);
   const actions = [];
-  if (hasPreview && hasBaidu) {
+  if (hasPreview && downloads.length) {
     actions.push(`<a class="btn btn-primary" href="${escapeAttr(links.study(deck.slug))}">Open in reviewer</a>`);
-    actions.push(
-      `<a class="btn btn-secondary" href="${escapeAttr(deck.baiduLink)}" target="_blank" rel="noopener">Download via Baidu Netdisk</a>`,
-    );
-  } else if (hasBaidu) {
-    actions.push(
-      `<a class="btn btn-primary" href="${escapeAttr(deck.baiduLink)}" target="_blank" rel="noopener">Download via Baidu Netdisk</a>`,
-    );
+    actions.push(downloads.map(downloadButtonHtml).join('\n'));
+  } else if (downloads.length) {
+    actions.push(downloadButtonHtml(downloads[0], true));
+    actions.push(downloads.slice(1).map((d) => downloadButtonHtml(d)).join('\n'));
     actions.push(`<a class="btn btn-secondary" href="${escapeAttr(links.open())}">Open local file</a>`);
   } else if (hasPreview) {
     actions.push(`<a class="btn btn-primary" href="${escapeAttr(links.study(deck.slug))}">Open in reviewer</a>`);
@@ -292,13 +309,13 @@ export function deckArticleHtml(deck, mdHtml, links = seoLinks) {
 export function heroHtml(links = seoLinks) {
   return `
   <section class="hero"><div class="container">
-    <h1>Review Anki decks, right in your browser</h1>
+    <h1>Browse &amp; review Anki decks, right in your browser</h1>
     <p class="lead">${SITE_TAGLINE}</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="${escapeAttr(links.open())}">Open a .apkg / .colpkg</a>
       <a class="btn btn-secondary" href="${escapeAttr(links.about())}">How it works</a>
     </div>
-    <p class="hero-note">No account. No upload. Your file is parsed on your device and never sent anywhere.</p>
+    <p class="hero-note">No Anki software. No registration. No upload — your file is parsed on your device and never sent anywhere.</p>
   </div></section>`;
 }
 
@@ -310,8 +327,17 @@ export function aboutBodyHtml() {
       <h2>What it is</h2>
       <p>
         Anki Browser lets you open Anki deck files (<code>.apkg</code> shared decks and
-        <code>.colpkg</code> collection backups) and review them directly in your web browser.
+        <code>.colpkg</code> collection backups), <strong>browse the cards</strong>, and
+        <strong>review them with spaced repetition</strong> — all in your web browser.
+        You don't need to install the Anki desktop app, and you don't need an account.
         Everything is parsed on your device — your file is never uploaded to a server.
+      </p>
+      <h2>Why no Anki software?</h2>
+      <p>
+        Anki files are just a container (a zip with a SQLite database inside). The browser
+        can read them directly with WebAssembly, so the whole experience — browsing cards,
+        seeing images and audio, cloze deletions, the review scheduler — runs in a normal
+        web page. Download a shared deck and start studying in seconds.
       </p>
       <h2>Privacy</h2>
       <p>

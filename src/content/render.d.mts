@@ -1,5 +1,14 @@
 /** Type declarations for the plain-JS `render.mjs` (shared by the SPA and the SEO prerender). */
 
+/** A downloadable source for a deck (Baidu Netdisk, GitHub Release, direct URL, …). */
+export interface DownloadLink {
+  url: string;
+  /** Button label, e.g. "百度网盘" / "GitHub Release" / "Direct download". Defaults to "Download". */
+  label?: string;
+  /** Optional hint shown under the button, e.g. "提取码 abcd". */
+  note?: string;
+}
+
 export interface DeckMeta {
   slug: string;
   title: string;
@@ -8,6 +17,8 @@ export interface DeckMeta {
   tags?: string[];
   language?: string;
   cover?: string;
+  /** One or more download sources. Legacy `baiduLink` string is also accepted. */
+  downloads?: DownloadLink[];
   baiduLink?: string;
   previewFile?: string;
   markdown?: string;
