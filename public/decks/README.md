@@ -8,6 +8,27 @@ the intro text (`content`), the download links (`downloads`) and the tags. Edit 
 file, commit to `main`, and the site rebuilds and redeploys automatically
 (via GitHub Actions; the deploy usually finishes in 2–3 minutes).
 
+> ## ⚡ Quick answer — how do I add the intro text?
+>
+> **You don't upload any file.** The intro text is written **inline, directly inside
+> `index.json`**, in the deck's **`content`** field, using **Markdown** (not HTML).
+>
+> Minimal example — add a `content` field to the deck entry:
+>
+> ```json
+> {
+>   "slug": "my-vocab",
+>   "title": "My Vocab",
+>   "content": "# My Vocab\n\nThis deck helps you learn English vocabulary.\n\n- 1000 words\n- Example sentences",
+>   "downloads": []
+> }
+> ```
+>
+> In the JSON, `\n` means a new line. Save, commit to `main`, done — the page is
+> generated at `/deck/my-vocab/`. **Do not write HTML** (it is escaped, not rendered),
+> and **no separate `.md` file is required** (a legacy `markdown` field still works,
+> but inline `content` is the recommended way).
+
 ---
 
 ## How to add a deck (3 steps)
