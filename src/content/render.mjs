@@ -15,6 +15,24 @@ export const SITE_TITLE = 'Anki Browser';
 export const SITE_TAGLINE = 'Open Anki decks in your browser. Review offline, no account, nothing uploaded.';
 export const SITE_DESCRIPTION =
   'Upload an .apkg or .colpkg Anki deck and review it right in your browser. Full spaced-repetition scheduler, media and cloze support, and local-only progress — your data never leaves your device.';
+export const SITE_KEYWORDS = [
+  'Anki',
+  'Anki browser',
+  'flashcards',
+  'spaced repetition',
+  'SM-2',
+  '.apkg',
+  '.colpkg',
+  'review offline',
+  'browser-based Anki',
+  'open Anki in browser',
+  'no upload',
+  'private',
+  'cloze',
+  'vocabulary',
+].join(', ');
+/** Absolute URL of the Open Graph share image (1200x630, SVG). */
+export const SITE_IMAGE = SITE_URL + '/og-image.svg';
 
 /** Link set; the SPA uses hash routes, the prerender uses canonical paths. */
 export const seoLinks = {
@@ -166,12 +184,11 @@ export function siteHeaderHtml(opts = {}) {
 }
 
 export function siteFooterHtml() {
+  // Single centered line, no white panel — sits at the bottom of the page
+  // against the page background, exactly per the wireframe.
   return `
   <footer class="site-footer">
-    <div class="site-footer-inner">
-      <p>Anki Browser &middot; everything runs locally in your browser.</p>
-      <p class="muted">Made by <a href="https://endril.com" target="_blank" rel="noopener">Endril</a>.</p>
-    </div>
+    <p class="site-footer-line">Anki Browser &middot; Made by <a href="https://endril.com" target="_blank" rel="noopener">Endril</a></p>
   </footer>`;
 }
 
@@ -217,17 +234,31 @@ export function decksGalleryHtml(decks, links = seoLinks) {
 /* -------------------------------------------------------------------------- */
 
 export function deckArticleHtml(deck, mdHtml, links = seoLinks) {
+  // Button priority:
+  //   - previewFile + baiduLink : preview is primary, Baidu is secondary
+  //     (let the visitor try it first, then download the full deck)
+  //   - only baiduLink           : Baidu is primary (they MUST download first),
+  //                                "Open local file" is secondary
+  //   - only previewFile         : preview is primary, "Open local file" is secondary
+  //   - neither                  : "Open local file" primary, Baidu slot disabled
+  const hasPreview = !!deck.previewFile;
+  const hasBaidu = !!deck.baiduLink;
   const actions = [];
-  if (deck.previewFile) {
+  if (hasPreview && hasBaidu) {
     actions.push(`<a class="btn btn-primary" href="${escapeAttr(links.study(deck.slug))}">Open in reviewer</a>`);
-  } else {
-    actions.push(`<a class="btn btn-primary" href="${escapeAttr(links.open())}">Open local file</a>`);
-  }
-  if (deck.baiduLink) {
     actions.push(
       `<a class="btn btn-secondary" href="${escapeAttr(deck.baiduLink)}" target="_blank" rel="noopener">Download via Baidu Netdisk</a>`,
     );
+  } else if (hasBaidu) {
+    actions.push(
+      `<a class="btn btn-primary" href="${escapeAttr(deck.baiduLink)}" target="_blank" rel="noopener">Download via Baidu Netdisk</a>`,
+    );
+    actions.push(`<a class="btn btn-secondary" href="${escapeAttr(links.open())}">Open local file</a>`);
+  } else if (hasPreview) {
+    actions.push(`<a class="btn btn-primary" href="${escapeAttr(links.study(deck.slug))}">Open in reviewer</a>`);
+    actions.push(`<a class="btn btn-secondary" href="${escapeAttr(links.open())}">Open local file</a>`);
   } else {
+    actions.push(`<a class="btn btn-primary" href="${escapeAttr(links.open())}">Open local file</a>`);
     actions.push(
       `<span class="btn btn-secondary is-disabled" title="The owner will add a download link soon">Download link pending</span>`,
     );
@@ -315,24 +346,44 @@ export function jsonLdSite() {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: SITE_TITLE,
+    alternateName: 'Anki Browser by Endril',
     url: SITE_URL + '/',
     description: SITE_DESCRIPTION,
     applicationCategory: 'EducationalApplication',
+    applicationSubCategory: 'Spaced Repetition / Flashcards',
     operatingSystem: 'Any (browser)',
+    browserRequirements: 'Requires WebAssembly + IndexedDB',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    image: SITE_IMAGE,
+    inLanguage: 'en',
+    isAccessibleForFree: true,
+    publisher: { '@type': 'Organization', name: 'Endril', url: 'https://endril.com' },
     author: { '@type': 'Organization', name: 'Endril', url: 'https://endril.com' },
+    potentialAction: { '@type': 'UseAction', target: SITE_URL + '/' },
   };
 }
 
 export function jsonLdDeck(deck) {
+  const published = deck.updated || new Date().toISOString().slice(0, 10);
   return {
     '@context': 'https://schema.org',
-    '@type': 'Dataset',
+    '@type': 'LearningResource',
     name: deck.title,
+    headline: deck.title,
     description: deck.description || deck.subtitle || '',
     url: `${SITE_URL}/deck/${deck.slug}/`,
+    image: SITE_IMAGE,
+    inLanguage: deck.language || 'en',
     keywords: (deck.tags ?? []).join(', '),
+    learningResourceType: 'Flashcard deck',
+    educationalUse: 'self study',
+    interactivityType: 'active',
+    isAccessibleForFree: true,
+    datePublished: published,
+    dateModified: published,
     license: 'https://creativecommons.org/licenses/by-nc/4.0/',
     creator: { '@type': 'Organization', name: 'Endril', url: 'https://endril.com' },
+    publisher: { '@type': 'Organization', name: 'Endril', url: 'https://endril.com' },
+    provider: { '@type': 'Organization', name: 'Anki Browser', url: SITE_URL + '/' },
   };
 }

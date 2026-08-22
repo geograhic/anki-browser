@@ -27,6 +27,8 @@ export const SITE_URL: string;
 export const SITE_TITLE: string;
 export const SITE_TAGLINE: string;
 export const SITE_DESCRIPTION: string;
+export const SITE_KEYWORDS: string;
+export const SITE_IMAGE: string;
 export const seoLinks: LinkSet;
 export const appLinks: LinkSet;
 

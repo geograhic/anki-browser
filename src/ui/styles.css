@@ -272,9 +272,23 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 .endril-link { font-weight: 650; }
 
 /* ------------------------------ Footer ---------------------------------- */
-.site-footer { border-top: 1px solid var(--line); background: var(--panel); margin-top: 40px; }
-.site-footer-inner { max-width: var(--maxw); margin: 0 auto; padding: 22px 20px; color: var(--muted); font-size: 13.5px; }
-.site-footer p { margin: 2px 0; }
+/* Single centered line at page bottom, no panel, no border. */
+.site-footer {
+  margin-top: 48px;
+  padding: 20px 20px 36px;
+  text-align: center;
+}
+.site-footer-line {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: .1px;
+}
+.site-footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.site-footer a:hover { color: var(--blue); text-decoration: underline; }
 .muted { color: var(--muted); }
 .empty-note { color: var(--muted); padding: 30px 0; text-align: center; }
 
@@ -285,9 +299,119 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-@media (max-width: 560px) {
+/* ========================================================================
+   Responsive — desktop (default) / tablet (≤768) / mobile (≤480)
+   No rounded corners anywhere (border-radius: 0 is the site rule).
+   ======================================================================== */
+
+/* ---- Tablet (portrait) ---- */
+@media (max-width: 768px) {
+  .container { padding: 0 16px; }
+
+  .site-header-inner { padding: 0 16px; height: 54px; }
+  .brand-name { font-size: 16px; }
+  .nav-link { padding: 8px 10px; font-size: 14px; }
+
+  .hero { padding: 40px 0 36px; }
   .hero h1 { font-size: 30px; }
-  .card-scroll { padding: 24px 20px; }
+  .hero p.lead { font-size: 16px; }
+
+  .section { padding: 32px 0; }
+  .section-head h2 { font-size: 21px; }
+
+  .deck-grid { gap: 16px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+  .deck-article { padding: 24px 0 40px; }
+  .deck-hero { gap: 16px; }
+  .deck-hero .deck-cover-gen, .deck-hero .deck-cover-img { width: 120px; }
+  .deck-title { font-size: 24px; }
+  .deck-subtitle { font-size: 15px; }
+
+  .about-wrap { padding: 28px 16px 48px; }
+  .about-wrap h1 { font-size: 24px; }
+  .about-card { padding: 22px; }
+
+  .open-wrap { padding: 28px 16px 48px; }
+  .dropzone { padding: 44px 20px; }
+
+  .study-wrap { padding: 20px 16px 48px; }
+  .card-scroll { padding: 26px 24px; }
   .card-content { font-size: 19px; }
-  .rating-row { grid-template-columns: repeat(2, 1fr); }
+  .rating-row { gap: 8px; }
+  .rating-btn { padding: 12px 6px; }
+  .rating-btn .r-label { font-size: 14px; }
+  .rating-btn .r-delay { font-size: 11.5px; }
+
+  .btn { padding: 10px 16px; font-size: 14.5px; }
+  .deck-actions { gap: 10px; }
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 480px) {
+  html, body { font-size: 15.5px; }
+
+  .site-header-inner { padding: 0 12px; height: 52px; }
+  .site-nav { gap: 0; }
+  .nav-link { padding: 7px 8px; font-size: 13px; }
+  .brand-name { font-size: 15.5px; }
+
+  .hero { padding: 32px 0 28px; }
+  .hero h1 { font-size: 24px; letter-spacing: -.2px; }
+  .hero p.lead { font-size: 15px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { width: 100%; }
+  .hero-note { font-size: 13px; }
+
+  .section { padding: 24px 0; }
+  .section-head { margin-bottom: 16px; }
+  .section-head h2 { font-size: 19px; }
+
+  .deck-grid { grid-template-columns: 1fr; gap: 14px; }
+  .deck-cover-gen span { font-size: 40px; }
+  .deck-card-body { padding: 14px 16px 16px; }
+  .deck-card-title { font-size: 16px; }
+
+  .deck-article { padding: 18px 0 36px; }
+  .back-link { margin-bottom: 14px; font-size: 14px; }
+  .deck-hero { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .deck-hero .deck-cover-gen, .deck-hero .deck-cover-img { width: 96px; }
+  .deck-hero .deck-cover-gen span { font-size: 34px; }
+  .deck-title { font-size: 22px; }
+  .deck-subtitle { font-size: 14.5px; }
+  .deck-actions { flex-direction: column; align-items: stretch; margin: 18px 0; }
+  .deck-actions .btn { width: 100%; }
+
+  .prose h1 { font-size: 22px; }
+  .prose h2 { font-size: 18px; }
+  .prose h3 { font-size: 16px; }
+  .prose p, .prose li { font-size: 15px; }
+
+  .about-wrap { padding: 20px 14px 40px; }
+  .about-wrap h1 { font-size: 22px; }
+  .about-card { padding: 18px; }
+
+  .open-wrap { padding: 22px 14px 44px; }
+  .dropzone { padding: 36px 16px; }
+  .dropzone h2 { font-size: 18px; }
+
+  .study-wrap { padding: 16px 14px 40px; }
+  .study-topbar { gap: 6px; margin-bottom: 10px; }
+  .study-title { font-size: 16px; }
+  .study-meta { font-size: 12.5px; }
+  .card-stage { min-height: 240px; }
+  .card-scroll { padding: 20px 18px; }
+  .card-side-label { font-size: 11px; margin-bottom: 10px; }
+  .card-content { font-size: 17px; line-height: 1.6; }
+  .card-footer { padding: 12px 14px; }
+  .rating-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .rating-btn { padding: 11px 4px; }
+  .rating-btn .r-label { font-size: 13.5px; }
+  .rating-btn .r-delay { font-size: 11px; }
+  .study-done { padding: 40px 16px; }
+  .study-done h2 { font-size: 22px; }
+
+  .btn { padding: 10px 14px; font-size: 14px; }
+
+  .site-footer { margin-top: 36px; padding: 16px 14px 28px; }
+  .site-footer-line { font-size: 12.5px; }
 }

@@ -28,6 +28,8 @@ import {
   SITE_URL,
   SITE_TITLE,
   SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_IMAGE,
 } from '../src/content/render.mjs';
 
 // Deck metadata shape (mirrors DeckMeta in src/content/render.d.mts).
@@ -55,7 +57,7 @@ function descAttr(s) {
 }
 
 /** Wrap prerendered body content in the built shell with extra head tags. */
-function buildPage({ title, description, canonical, jsonLd, inner }) {
+function buildPage({ title, description, canonical, jsonLd, inner, ogType = 'website', image = SITE_IMAGE, noindex = false }) {
   let html = built;
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${descAttr(title)}</title>`);
   html = html.replace(
@@ -65,13 +67,35 @@ function buildPage({ title, description, canonical, jsonLd, inner }) {
 
   const head = [
     `<link rel="canonical" href="${canonical}" />`,
-    `<meta property="og:type" content="website" />`,
+    `<meta name="robots" content="${noindex ? 'noindex,follow' : 'index,follow'},max-image-preview:large,max-snippet:-1" />`,
+    `<meta name="keywords" content="${descAttr(SITE_KEYWORDS)}" />`,
+    `<meta name="author" content="Endril" />`,
+    `<meta name="theme-color" content="#2d7ff9" />`,
+    `<meta name="application-name" content="${descAttr(SITE_TITLE)}" />`,
+    `<meta name="generator" content="Anki Browser (static prerender)" />`,
+    // Open Graph
+    `<meta property="og:site_name" content="${descAttr(SITE_TITLE)}" />`,
+    `<meta property="og:type" content="${descAttr(ogType)}" />`,
     `<meta property="og:title" content="${descAttr(title)}" />`,
     `<meta property="og:description" content="${descAttr(description)}" />`,
     `<meta property="og:url" content="${canonical}" />`,
-    `<meta name="twitter:card" content="summary" />`,
+    `<meta property="og:image" content="${image}" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
+    `<meta property="og:image:alt" content="${descAttr(SITE_TITLE)} — review Anki decks in your browser" />`,
+    `<meta property="og:locale" content="en_US" />`,
+    // Twitter Card
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:site" content="@endril" />`,
+    `<meta name="twitter:creator" content="@endril" />`,
     `<meta name="twitter:title" content="${descAttr(title)}" />`,
     `<meta name="twitter:description" content="${descAttr(description)}" />`,
+    `<meta name="twitter:image" content="${image}" />`,
+    // Apple
+    `<meta name="apple-mobile-web-app-title" content="${descAttr(SITE_TITLE)}" />`,
+    `<meta name="apple-mobile-web-app-capable" content="yes" />`,
+    `<meta name="apple-mobile-web-app-status-bar-style" content="default" />`,
+    // Structured data
     `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`,
   ].join('\n    ');
   html = html.replace('</head>', `    ${head}\n  </head>`);
@@ -119,11 +143,12 @@ for (const deck of decks) {
   writePage(
     `deck/${deck.slug}/index.html`,
     buildPage({
-      title: `${deck.title} — Anki Browser`,
+      title: `${deck.title} — ${SITE_TITLE}`,
       description: deck.description || deck.subtitle || SITE_DESCRIPTION,
       canonical: `${SITE_URL}/deck/${deck.slug}/`,
       jsonLd: jsonLdDeck(deck),
       inner,
+      ogType: 'article',
     }),
   );
 }
@@ -141,10 +166,24 @@ writePage(
 );
 
 /* ---- sitemap.xml ---- */
-const urls = [SITE_URL + '/', SITE_URL + '/about/', ...decks.map((d) => `${SITE_URL}/deck/${d.slug}/`)];
+const today = new Date().toISOString().slice(0, 10);
+const urls = [
+  { loc: SITE_URL + '/', lastmod: today, priority: '1.0' },
+  { loc: SITE_URL + '/about/', lastmod: today, priority: '0.6' },
+  ...decks.map((d) => ({
+    loc: `${SITE_URL}/deck/${d.slug}/`,
+    lastmod: d.updated || today,
+    priority: d.featured ? '0.9' : '0.7',
+  })),
+];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.w3.org/1999/xhtml/sitemap/1.0">
-${urls.map((u) => `  <url><loc>${u}</loc></url>`).join('\n')}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls
+  .map(
+    (u) =>
+      `  <url><loc>${u.loc}</loc><lastmod>${u.lastmod}</lastmod><priority>${u.priority}</priority></url>`,
+  )
+  .join('\n')}
 </urlset>
 `;
 writeFileSync(resolve(dist, 'sitemap.xml'), sitemap);
