@@ -8,3 +8,5 @@ verify-fail.png
 .cache/
 live-diag.png
 vp-*.png
+__pycache__/
+*.pyc
