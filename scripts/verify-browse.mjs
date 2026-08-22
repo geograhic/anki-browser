@@ -1,9 +1,21 @@
 // Browse-mode verification: open demo deck, switch to Browse, flip cards.
 import { createRequire } from 'node:module';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
-const { chromium } = require('C:/Users/LJL/.workbuddy/binaries/node/workspace/node_modules/playwright');
-const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-const root = 'C:/Users/LJL/Li_System/Personal_Core/BaiduSyncdisk/Personal_Original/DL02_AtlasProjectFiles/02_DevSpace/20260822_anki-browser';
+
+function loadPlaywright() {
+  try {
+    return require('playwright');
+  } catch {
+    const ws = process.env.PLAYWRIGHT_PATH;
+    if (!ws) throw new Error('Playwright not found locally — set PLAYWRIGHT_PATH to its module dir');
+    return require(ws);
+  }
+}
+const { chromium } = loadPlaywright();
+const EDGE = process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const baseUrl = process.argv[2] || 'http://localhost:4173/anki-browser/';
 const apkg = root + '/public/decks/files/sample-basic.apkg';

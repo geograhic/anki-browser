@@ -18,13 +18,16 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
 
-/** Real exports from the maintainer's Anki archive; skipped when absent. */
-const ARCHIVE = 'C:/Users/LJL/Li_System/Personal_Core/BaiduSyncdisk/Core_Auxiliary/Book_Repository/20260520_DL03_Anki_Cloud_Archive';
-const DEFAULT_SAMPLES = [
-  `${ARCHIVE}/Li's Vocabulary-20251229200100_标本.apkg`,
-  `${ARCHIVE}/Li's Vocabulary-20260204154204_标本.apkg`,
-  `${ARCHIVE}/collection-20260520163312_标本.colpkg`,
-];
+/** Real exports from the maintainer's Anki archive; skipped when absent.
+ *  Set SPECIMEN_APKG (or pass files as CLI args) to point at your own copies. */
+const ARCHIVE = process.env.SPECIMEN_APKG || '';
+const DEFAULT_SAMPLES = ARCHIVE
+  ? [
+      `${ARCHIVE}/Li's Vocabulary-20251229200100_标本.apkg`,
+      `${ARCHIVE}/Li's Vocabulary-20260204154204_标本.apkg`,
+      `${ARCHIVE}/collection-20260520163312_标本.colpkg`,
+    ]
+  : [];
 
 let failures = 0;
 let checks = 0;

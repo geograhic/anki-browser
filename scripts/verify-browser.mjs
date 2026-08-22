@@ -20,12 +20,13 @@ import { existsSync } from 'node:fs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
 
-// Resolve Playwright from the managed node workspace if it is not local.
+// Resolve Playwright: try the local project first, else PLAYWRIGHT_PATH (env).
 function loadPlaywright() {
   try {
     return require('playwright');
   } catch {
-    const ws = 'C:/Users/LJL/.workbuddy/binaries/node/workspace/node_modules/playwright';
+    const ws = process.env.PLAYWRIGHT_PATH;
+    if (!ws) throw new Error('Playwright not found locally — set PLAYWRIGHT_PATH to its module dir');
     return require(ws);
   }
 }

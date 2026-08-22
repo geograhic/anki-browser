@@ -1,8 +1,18 @@
 // Multi-viewport verification: desktop / tablet / mobile, plus footer sanity.
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { chromium } = require('C:/Users/LJL/.workbuddy/binaries/node/workspace/node_modules/playwright');
-const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
+
+function loadPlaywright() {
+  try {
+    return require('playwright');
+  } catch {
+    const ws = process.env.PLAYWRIGHT_PATH;
+    if (!ws) throw new Error('Playwright not found locally — set PLAYWRIGHT_PATH to its module dir');
+    return require(ws);
+  }
+}
+const { chromium } = loadPlaywright();
+const EDGE = process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 
 const url = process.argv[2] || 'http://localhost:4173/anki-browser/';
 const browser = await chromium.launch({ executablePath: EDGE, args: ['--no-sandbox'] });
