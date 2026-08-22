@@ -5,3 +5,5 @@ verify-study.png
 verify-fail.png
 *.log
 .DS_Store
+.cache/
+live-diag.png
