@@ -1,0 +1,44 @@
+name: build-and-deploy
+
+# Auto-build + auto-deploy to Vercel whenever deck content or app code changes
+# on main. As the site owner you only need to edit public/decks/index.json and
+# public/decks/<slug>.md, commit to main, and the site updates itself.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/decks/**'
+      - 'src/**'
+      - 'index.html'
+      - 'vite.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/**'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (copy wasm + vite + SEO prerender)
+        run: npm run build
+
+      - name: Deploy dist/ to Vercel (REST API)
+        run: node scripts/deploy-vercel.mjs
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

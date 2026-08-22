@@ -3,10 +3,17 @@
 本页是**给你（站长）**看的，不是给访客看的。每个卡组的介绍页和下载链接都集中
 在两个地方管理：
 
-- **`public/decks/index.json`** — 卡组注册表（标题、标签、Baidu 网盘链接等元数据）
+- **`public/decks/index.json`** — 卡组注册表（标题、标签、下载链接等元数据）
 - **`public/decks/<slug>.md`** — 卡组的 Markdown 介绍文本
 
-只要改这两个地方 + 跑一次部署，卡组的介绍页就会出现在 `https://apps.endril.com/anki-browser/deck/<slug>/`。
+**全自动上线**：仓库已配置 GitHub Actions（`.github/workflows/deploy.yml`）。你只要
+把改动 **push 到 `main` 分支**（或在 GitHub 网页上直接编辑提交），机器人会自动
+构建并把站点部署到 Vercel——**不用跑任何命令，不用找 AI**。部署完成后介绍页会
+出现在 `https://apps.endril.com/anki-browser/deck/<slug>/`。
+
+> 网页上直接编辑的入口：GitHub 仓库 → `public/decks/` 文件夹 → 点进文件 →
+> 右上角 ✏️ 铅笔图标编辑 → 拉到页面底部 Commit changes → 选 "main" 分支 → 提交。
+> 提交后到仓库 Actions 页能看到自动部署在跑，约 2-3 分钟生效。
 
 ---
 
@@ -115,20 +122,23 @@
 - 填了 `previewFile`：页面显示 **"Open in reviewer"** 按钮（访客直接在线浏览/试看，不用下载）
 - 两个都填：先显示在线浏览按钮，再显示下载按钮
 
-### 4. 构建并部署
+### 4. 提交并上线（自动部署）
+
+把改动提交到 `main` 分支，GitHub Actions 会自动构建 + 部署：
 
 ```bash
-npm run build                       # 构建 + 生成 SEO 预渲染页
-node scripts/deploy-vercel.mjs      # 部署 dist/ 到 Vercel
-# 然后把 dist 的更改 push 到 GitHub：
 git add public/decks/
 git commit -m "Add deck: my-vocab"
-git push origin master:main
+git push origin main        # 推送后自动部署，约 2-3 分钟
 ```
+
+> 不会用 git？直接在 GitHub 网页编辑 `index.json` 和 `<slug>.md` 并 Commit changes
+> 到 main 分支，效果一样——Actions 会自动跑部署。
 
 部署后：
 - 首页 `https://apps.endril.com/anki-browser/` 多了一张新卡片
 - 介绍页 `https://apps.endril.com/anki-browser/deck/my-vocab/` 自动生成 + 收录进 sitemap
+- 部署进度可在仓库 **Actions** 页查看（绿色 ✓ = 成功）
 
 ---
 
