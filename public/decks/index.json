@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "li-vocabulary",
+    "title": "Li's Vocabulary",
+    "subtitle": "English \u2194 Chinese vocabulary & sentence bank",
+    "description": "A personal collection of English-Chinese vocabulary and example sentences, built and maintained by the site owner. Includes cloze-deletion cards for sentence mining.",
+    "tags": ["English", "Vocabulary", "Cloze", "Bilingual"],
+    "language": "en",
+    "cover": "",
+    "baiduLink": "",
+    "previewFile": "",
+    "markdown": "li-vocabulary.md",
+    "featured": true,
+    "updated": "2026-02-04"
+  },
+  {
+    "slug": "sample-basic",
+    "title": "Sample Deck (try it instantly)",
+    "subtitle": "A tiny bundled deck so you can test the reviewer with one click",
+    "description": "A demonstration deck shipped with the site. It contains a few basic and cloze cards plus an image, so you can try the reviewer without uploading your own file.",
+    "tags": ["Demo", "Basic", "Cloze"],
+    "language": "en",
+    "cover": "",
+    "baiduLink": "",
+    "previewFile": "decks/files/sample-basic.apkg",
+    "markdown": "sample-basic.md",
+    "featured": false,
+    "updated": "2026-08-22"
+  }
+]

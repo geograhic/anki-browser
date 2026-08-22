@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.workbuddy/
+verify-study.png
+verify-fail.png
+*.log
+.DS_Store

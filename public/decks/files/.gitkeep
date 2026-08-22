@@ -1,0 +1,2 @@
+# Place bundled preview .apkg files here (referenced by decks/index.json -> previewFile).
+# Large shared decks are NOT bundled; they are distributed via Baidu Netdisk instead.
