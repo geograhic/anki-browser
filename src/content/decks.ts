@@ -6,7 +6,9 @@ let indexCache: DeckMeta[] | null = null;
 
 export async function loadDeckIndex(): Promise<DeckMeta[]> {
   if (indexCache) return indexCache;
-  const res = await fetch(BASE + 'decks/index.json', { cache: 'no-cache' });
+  // 'reload' bypasses any stale browser/CDN copy so deck updates show
+  // immediately and a legacy `markdown` entry can never 404 into a blank page.
+  const res = await fetch(BASE + 'decks/index.json', { cache: 'reload' });
   if (!res.ok) throw new Error(`Could not load deck index (${res.status})`);
   indexCache = (await res.json()) as DeckMeta[];
   return indexCache;
@@ -18,9 +20,13 @@ export async function loadDeckMarkdown(deck: DeckMeta): Promise<string> {
   if (typeof deck.content === 'string' && deck.content.trim()) {
     return renderMarkdown(deck.content);
   }
-  if (!deck.markdown) return '';
+  if (!deck.markdown) {
+    return '<p class="deck-empty-note">This deck has no intro text yet.</p>';
+  }
   const res = await fetch(BASE + 'decks/' + deck.markdown, { cache: 'no-cache' });
-  if (!res.ok) return '';
+  if (!res.ok) {
+    return '<p class="deck-empty-note">This deck has no intro text yet.</p>';
+  }
   const md = await res.text();
   return renderMarkdown(md);
 }
