@@ -188,10 +188,7 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     sidebarList.replaceChildren();
     const q = searchQuery.toLowerCase();
     const filtered = q
-      ? allEntries.filter((e) =>
-          e.title.toLowerCase().includes(q) ||
-          e.preview.toLowerCase().includes(q) ||
-          e.deckName.toLowerCase().includes(q))
+      ? allEntries.filter((e) => e.searchText.includes(q))
       : allEntries;
 
     const countEl = qs('#sidebar-count', sidebar) as HTMLElement;

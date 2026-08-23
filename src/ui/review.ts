@@ -32,6 +32,12 @@ export interface BrowseCardEntry {
   preview: string;
   /** Human-readable deck name the card belongs to. */
   deckName: string;
+  /**
+   * Full-text search blob: every note field flattened to lowercase plain
+   * text. Used by the sidebar search so queries can match ANY content in
+   * the card, not just the title/preview that happen to be displayed.
+   */
+  searchText: string;
 }
 
 /**
@@ -160,12 +166,24 @@ export class StudySession {
       const fields = note?.fields ?? [];
       const title = fields[0] ? plainText(fields[0], 60) : '';
       const preview = fields[1] ? plainText(fields[1], 70) : '';
+      const deckName = this.deckNameById.get(card.did) || '';
+      // Full-text search blob: ALL note fields (not just title/preview) plus
+      // the deck name, flattened to lowercase plain text so any content is
+      // searchable.
+      const searchText = [
+        ...fields.map((f) => plainText(f, 5000)),
+        deckName,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
       entries.push({
         index: i,
         cardId: st.cardId,
         title: title || `Card ${i + 1}`,
         preview,
-        deckName: this.deckNameById.get(card.did) || '',
+        deckName,
+        searchText,
       });
     }
     return entries;

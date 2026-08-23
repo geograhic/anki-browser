@@ -79,6 +79,19 @@ async function runAt(viewport, label, out) {
   console.log(`[${label}] highlight marks: ${markCount}`);
   if (markCount < 1) throw new Error(`[${label}] search highlight <mark> missing`);
 
+  // Full-text search: a term that lives only in a non-title field must match.
+  await page.fill('.sidebar-search', 'Paris');
+  await page.waitForTimeout(150);
+  const parisCount = await page.$$eval('.sidebar-item', (l) => l.length);
+  console.log(`[${label}] full-text search 'Paris' (answer field): ${parisCount} item(s)`);
+  if (parisCount < 1) throw new Error(`[${label}] full-text search 'Paris' should match (answer field)`);
+  // Cloze content is searchable too: {{c1::sun}} → plain text "sun".
+  await page.fill('.sidebar-search', 'sun');
+  await page.waitForTimeout(150);
+  const sunCount = await page.$$eval('.sidebar-item', (l) => l.length);
+  console.log(`[${label}] full-text search 'sun' (cloze): ${sunCount} item(s)`);
+  if (sunCount < 1) throw new Error(`[${label}] full-text search 'sun' should match (cloze text)`);
+
   // Enter jumps to first match; Esc clears.
   await page.press('.sidebar-search', 'Enter');
   await page.waitForTimeout(200);
