@@ -35,6 +35,11 @@ export interface LinkSet {
   open: () => string;
   deck: (slug: string) => string;
   study: (slug: string) => string;
+  apkgViewer: () => string;
+  colpkgViewer: () => string;
+  zhHome: () => string;
+  zhApkg: () => string;
+  zhColpkg: () => string;
 }
 
 export const SITE_URL: string;
@@ -55,5 +60,26 @@ export function siteHeaderHtml(opts?: { active?: string; links?: LinkSet }): str
 export function siteFooterHtml(): string;
 export function heroHtml(links?: LinkSet): string;
 export function aboutBodyHtml(): string;
+
+export interface ViewerFaq {
+  q: string;
+  a: string;
+}
+export interface ViewerContent {
+  h1: string;
+  lead: string;
+  ctaLabel: string;
+  note: string;
+  sections: { h2: string; paras?: string[]; list?: string[] }[];
+  faq: ViewerFaq[];
+}
+export function viewerContent(fmt: 'apkg' | 'colpkg', lang: 'en' | 'zh'): ViewerContent;
+export function viewerBodyHtml(opts: {
+  fmt: 'apkg' | 'colpkg';
+  lang?: 'en' | 'zh';
+  links?: LinkSet;
+}): string;
+export function zhHomeBodyHtml(links?: LinkSet): string;
 export function jsonLdSite(): object;
 export function jsonLdDeck(deck: DeckMeta): object;
+export function jsonLdFaq(faqs: ViewerFaq[]): object;

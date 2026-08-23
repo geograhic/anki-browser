@@ -5,6 +5,7 @@ import { renderDeck } from './pages/deck';
 import { renderOpen } from './pages/open';
 import { renderStudy } from './pages/study';
 import { renderAbout } from './pages/about';
+import { renderViewer } from './pages/viewer';
 import { qs } from './dom';
 
 export function renderApp(): void {
@@ -35,6 +36,8 @@ async function render(route: Route, app: HTMLElement): Promise<void> {
     else if (first === 'open') renderOpen(outlet);
     else if (first === 'study') await renderStudy(outlet, route);
     else if (first === 'about') renderAbout(outlet);
+    else if (first === 'apkg-viewer' || first === 'colpkg-viewer' || first === 'zh')
+      renderViewer(outlet, route);
     else await renderHome(outlet);
   } catch (e) {
     outlet.innerHTML = `<div class="error-note">${(e as Error).message}</div>`;

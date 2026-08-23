@@ -130,6 +130,8 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 .hero p.lead { font-size: 18px; color: var(--muted); max-width: 640px; margin: 0 0 24px; }
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .hero-note { margin-top: 18px; font-size: 13.5px; color: var(--muted); }
+.hero-tools { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+.hero-tools a { color: var(--blue); }
 
 /* ----------------------------- Deck grid -------------------------------- */
 .section { padding: 40px 0; }
@@ -292,6 +294,10 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   box-shadow: var(--shadow); padding: 26px 28px; margin-top: 20px;
 }
 .about-card h2 { font-size: 19px; margin-top: 0; }
+.about-card h3 { font-size: 16px; margin: 20px 0 6px; }
+.about-card p { margin: 12px 0; }
+.about-card ul { margin: 12px 0; padding-left: 22px; }
+.about-card li { margin: 4px 0; }
 .endril-link { font-weight: 650; }
 
 /* ------------------------------ Footer ---------------------------------- */
