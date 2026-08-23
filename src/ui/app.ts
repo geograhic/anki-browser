@@ -23,13 +23,17 @@ function activeKey(segments: string[]): string {
 
 async function render(route: Route, app: HTMLElement): Promise<void> {
   const key = activeKey(route.segments);
+  const [first] = route.segments;
+  // The study view is an immersive fixed-height two-pane app: the page itself
+  // must not scroll (each pane scrolls internally). Rendering the site footer
+  // there would add page height and reintroduce page-level scrolling.
+  const footer = first === 'study' ? '' : siteFooterHtml();
   app.innerHTML =
     siteHeaderHtml({ active: key, links: appLinks }) +
     '<main id="outlet"></main>' +
-    siteFooterHtml();
+    footer;
 
   const outlet = qs('#outlet', app)!;
-  const [first] = route.segments;
 
   try {
     if (first === 'deck') await renderDeck(outlet, route);

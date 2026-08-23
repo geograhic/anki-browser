@@ -1,5 +1,6 @@
 import { openPackage } from '../review';
 import { setSession } from '../state';
+import { saveLastFile } from '../storage';
 import { qs } from '../dom';
 import { navigate } from '../router';
 
@@ -55,6 +56,9 @@ export function renderOpen(outlet: HTMLElement): void {
       status.innerHTML = `<p class="parsing-note">Parsing collection…</p>`;
       const session = await openPackage(bytes, file.name);
       setSession(session);
+      // Keep the file around so a reload (or any in-app navigation) does not
+      // lose the open deck. The most recent file is what gets restored.
+      void saveLastFile(file.name, bytes);
       navigate('#/study');
     } catch (err) {
       status.innerHTML = `<div class="error-note">Could not open this file: ${(err as Error).message}</div>`;

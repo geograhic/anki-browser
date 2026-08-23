@@ -198,10 +198,14 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 
 /* ------------------------------ Study ----------------------------------- */
 .study-wrap { max-width: none; margin: 0; padding: 0; }
+/* Fixed-height, two-pane layout: the page itself never scrolls inside the
+   study view — the sidebar list and the card area each scroll on their own.
+   (Site header is 58px + 1px border on desktop.) */
 .study-layout {
   display: flex;
   align-items: stretch;
-  min-height: calc(100vh - 130px);
+  height: calc(100vh - 59px);
+  overflow: hidden;
 }
 
 /* ---------- Browse-mode sidebar ---------- */
@@ -418,15 +422,20 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 .study-main {
   flex: 1;
   min-width: 0;
-  padding: 24px 20px 60px;
+  padding: 20px 20px 20px;
   max-width: 820px;
   margin: 0 auto;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .study-main .study-wrap { /* keep legacy selector chain */ }
 .study-topbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   margin-bottom: 14px; flex-wrap: wrap;
+  flex-shrink: 0;
 }
 .study-title { font-size: 18px; font-weight: 650; color: var(--ink); }
 .study-meta { font-size: 13.5px; color: var(--muted); }
@@ -448,13 +457,16 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 .progress {
   height: 8px; background: var(--line-soft); border: 1px solid var(--line);
   border-radius: var(--radius); overflow: hidden; margin-bottom: 18px;
+  flex-shrink: 0;
 }
 .progress > span { display: block; height: 100%; background: var(--blue); width: 0; transition: width .25s ease; }
 
 .card-stage {
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-  box-shadow: var(--shadow); min-height: 320px;
+  box-shadow: var(--shadow); min-height: 0;
   display: flex; flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 .card-scroll { padding: 34px 38px; flex: 1; overflow: auto; }
 .card-side-label {
@@ -473,7 +485,7 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 .card-content .tag-chip { margin: 0 4px 4px 0; }
 .card-content .template-error { color: var(--again); font-family: monospace; }
 .card-content .latex-fallback { background: #fff; border: 1px solid var(--line); padding: 2px 6px; }
-.card-footer { padding: 16px 20px; border-top: 1px solid var(--line-soft); }
+.card-footer { padding: 16px 20px; border-top: 1px solid var(--line-soft); flex-shrink: 0; }
 
 .answer-row { display: flex; justify-content: center; }
 .rating-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -594,7 +606,7 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   .sidebar-header { padding: 12px 14px; }
   .sidebar-search-wrap { padding: 10px 12px 8px; }
   .sidebar-item { padding: 8px 14px; }
-  .study-main { padding: 20px 16px 48px; max-width: none; }
+  .study-main { padding: 16px; max-width: none; }
   .card-scroll { padding: 26px 24px; }
   .card-content { font-size: 19px; }
   .rating-row { gap: 8px; }
@@ -654,7 +666,7 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   .dropzone { padding: 36px 16px; }
   .dropzone h2 { font-size: 18px; }
 
-  .study-wrap { padding: 16px 14px 40px; }
+  .study-wrap { padding: 0; }
   .study-topbar { gap: 6px; margin-bottom: 10px; }
   .study-title { font-size: 16px; }
   .study-meta { font-size: 12.5px; }
@@ -675,7 +687,7 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 
   /* Mobile: sidebar becomes a full-screen overlay; the close button lives
      inside the sidebar header (icon-row), not in the topbar. */
-  .study-layout { position: relative; }
+  .study-layout { position: relative; height: calc(100vh - 53px); }
   .study-sidebar {
     position: fixed;
     top: 0;
@@ -698,7 +710,7 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
     transition: opacity .2s ease;
   }
   .sidebar-backdrop.is-active { opacity: 1; pointer-events: auto; }
-  .study-main { padding: 14px 12px 40px; max-width: none; }
+  .study-main { padding: 12px; max-width: none; }
   /* On phone the topbar toggle is hidden; the sidebar provides its own close
      button in its header. The user always has an obvious way to toggle. */
   .sidebar-toggle { display: none !important; }

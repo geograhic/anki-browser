@@ -1,5 +1,5 @@
 import { getSession, setSession, clearSession } from '../state';
-import { clearStates } from '../storage';
+import { clearStates, loadLastFile, clearLastFile } from '../storage';
 import { loadDeckIndex, deckBySlug, previewUrl } from '../../content/decks';
 import { openPackage } from '../review';
 import type { StudySession } from '../review';
@@ -16,6 +16,7 @@ export async function renderStudy(outlet: HTMLElement, route: { query: URLSearch
   const deckSlug = route.query.get('deck');
   let session = getSession() as StudySession | null;
 
+  // No in-memory session yet, but a deck preview was requested (e.g. from a deck page).
   if (!session && deckSlug) {
     outlet.innerHTML = `<div class="study-wrap"><div class="spinner"></div><p class="muted" style="text-align:center">Loading deck…</p></div>`;
     try {
@@ -33,6 +34,26 @@ export async function renderStudy(outlet: HTMLElement, route: { query: URLSearch
     } catch (e) {
       outlet.innerHTML = `<div class="study-wrap"><div class="error-note">${(e as Error).message}</div></div>`;
       return;
+    }
+  }
+
+  // No in-memory session and no explicit deck requested: restore the most
+  // recently opened file from IndexedDB so a reload (or coming back to the
+  // study page after browsing elsewhere) never drops the user's open deck.
+  if (!session) {
+    const last = await loadLastFile();
+    if (last) {
+      outlet.innerHTML = `<div class="study-wrap"><div class="spinner"></div><p class="muted" style="text-align:center">Restoring…</p></div>`;
+      try {
+        session = await openPackage(last.bytes, last.name);
+        setSession(session);
+      } catch {
+        // The persisted copy may be from an older session that no longer
+        // parses cleanly; forget it rather than blocking the page.
+        void clearLastFile();
+        outlet.innerHTML = noSession();
+        return;
+      }
     }
   }
 
