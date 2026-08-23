@@ -22,6 +22,37 @@ export interface RenderedCard {
   cardId: number;
 }
 
+/** One entry shown in the browse-mode sidebar list. */
+export interface BrowseCardEntry {
+  index: number;
+  cardId: number;
+  /** Short display title (first note field, plain text). */
+  title: string;
+  /** Secondary preview snippet (second note field, if available). */
+  preview: string;
+  /** Human-readable deck name the card belongs to. */
+  deckName: string;
+}
+
+/**
+ * Collapse a (possibly HTML) note field value into a short plain-text label.
+ * Anki cloze markers like `{{c1::sun}}` are reduced to their inner text so the
+ * sidebar title stays readable.
+ */
+function plainText(html: string, maxLen: number = 60): string {
+  let stripped = html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/\s+/g, ' ')
+    .trim();
+  stripped = stripped.replace(/\{\{c\d+::([^}:]+)(?:::[^}]*)?\}\}/g, '$1');
+  return stripped.length > maxLen ? stripped.slice(0, maxLen) + '…' : stripped;
+}
+
 /**
  * Drives one study session over an opened package.
  *
@@ -112,6 +143,32 @@ export class StudySession {
   browseIndexOf(cardId: number): number {
     const i = this.browsePos.get(cardId);
     return i === undefined ? 0 : i;
+  }
+
+  /**
+   * Pre-computed sidebar entries: for every card in browse order, return
+   * a short title (first note field) and optional preview (second field).
+   * Used by the browse-mode card list; cheap to call once on mount.
+   */
+  getBrowseEntries(): BrowseCardEntry[] {
+    const entries: BrowseCardEntry[] = [];
+    for (let i = 0; i < this.browseOrder.length; i++) {
+      const st = this.browseOrder[i];
+      const card = this.cardById.get(st.cardId);
+      if (!card) continue;
+      const note = this.noteById.get(card.nid);
+      const fields = note?.fields ?? [];
+      const title = fields[0] ? plainText(fields[0], 60) : '';
+      const preview = fields[1] ? plainText(fields[1], 70) : '';
+      entries.push({
+        index: i,
+        cardId: st.cardId,
+        title: title || `Card ${i + 1}`,
+        preview,
+        deckName: this.deckNameById.get(card.did) || '',
+      });
+    }
+    return entries;
   }
 
   private rebuild(): void {

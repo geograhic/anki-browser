@@ -197,7 +197,233 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 .prose hr { border: none; border-top: 1px solid var(--line); margin: 24px 0; }
 
 /* ------------------------------ Study ----------------------------------- */
-.study-wrap { max-width: 820px; margin: 0 auto; padding: 24px 20px 60px; }
+.study-wrap { max-width: none; margin: 0; padding: 0; }
+.study-layout {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 130px);
+}
+
+/* ---------- Browse-mode sidebar ---------- */
+.study-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width .25s ease;
+  z-index: 10;
+}
+.study-sidebar.is-collapsed { width: 0; border-right-color: transparent; }
+.study-sidebar.is-hidden { display: none; }
+
+/* Sidebar toggle button in topbar */
+.sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  border-radius: var(--radius);
+  line-height: 1;
+  transition: background .08s ease, color .08s ease, border-color .08s ease;
+}
+.sidebar-toggle:hover { background: var(--blue-soft); color: var(--blue-dark); border-color: #cfe2ff; }
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--panel-2);
+}
+.sidebar-title { font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: .3px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-count { font-size: 12px; color: var(--muted); font-weight: 500; }
+/* Close button inside the sidebar header — visible on mobile only. */
+.sidebar-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  line-height: 1;
+  margin-left: auto;
+  transition: background .08s ease, color .08s ease;
+}
+.sidebar-close:hover { background: var(--panel); color: var(--ink); border-color: #c2c9d2; }
+
+.sidebar-search-wrap {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  position: relative;
+}
+.sidebar-search {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  font-size: 13.5px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: var(--radius);
+  outline: none;
+  font-family: var(--font);
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.sidebar-search:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(45, 127, 249, .14); }
+.sidebar-search::placeholder { color: var(--muted); }
+.sidebar-search::-webkit-search-cancel-button { display: none; }
+.sidebar-search-clear {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: -5px;
+  width: 22px; height: 22px;
+  display: none;
+  align-items: center; justify-content: center;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--radius);
+  padding: 0;
+  transition: background .08s ease, color .08s ease, border-color .08s ease;
+}
+.sidebar-search-clear:hover { background: var(--panel-2); color: var(--ink); border-color: #c2c9d2; }
+.sidebar-search-clear.is-visible { display: inline-flex; }
+
+.sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 0;
+  cursor: grab;
+}
+.sidebar-list:active { cursor: grabbing; }
+.sidebar-list::-webkit-scrollbar { width: 6px; }
+.sidebar-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 0; }
+.sidebar-list::-webkit-scrollbar-track { background: transparent; }
+
+.sidebar-item {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 4px 10px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: background .08s ease, border-left-color .12s ease, padding-left .12s ease, transform .04s ease;
+  outline: none;
+}
+.sidebar-item:last-child { border-bottom: none; }
+.sidebar-item:hover { background: var(--blue-soft); }
+.sidebar-item:focus-visible {
+  background: var(--blue-soft);
+  box-shadow: inset 2px 0 0 var(--blue-dark);
+}
+.sidebar-item:active { transform: translateY(1px); }
+.sidebar-item.is-active {
+  background: var(--blue-soft);
+  border-left-color: var(--blue);
+  padding-left: 15px;
+}
+.sidebar-item mark {
+  background: #fff3bf;
+  color: #6b5300;
+  padding: 0 2px;
+  font-weight: 600;
+}
+.item-num {
+  grid-row: 1 / span 2;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  align-self: center;
+}
+.item-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.item-preview {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+.item-deck {
+  grid-column: 2;
+  font-size: 11px;
+  color: var(--blue);
+  font-weight: 550;
+}
+.sidebar-empty {
+  padding: 32px 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Floating "Show cards" button — visible on mobile only while the sidebar
+   is closed. The topbar toggle is hidden there to avoid overlap with the
+   slide-in sidebar overlay. */
+.sidebar-fab {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 51;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--blue);
+  border: 1px solid var(--blue);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(45, 127, 249, .25);
+  letter-spacing: .2px;
+}
+.sidebar-fab:hover { background: var(--blue-dark); border-color: var(--blue-dark); }
+.sidebar-fab:active { transform: translateY(1px); }
+.sidebar-fab.is-visible { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- Study main area (right of sidebar) ---------- */
+.study-main {
+  flex: 1;
+  min-width: 0;
+  padding: 24px 20px 60px;
+  max-width: 820px;
+  margin: 0 auto;
+  width: 100%;
+}
+.study-main .study-wrap { /* keep legacy selector chain */ }
 .study-topbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   margin-bottom: 14px; flex-wrap: wrap;
@@ -363,7 +589,12 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   .open-wrap { padding: 28px 16px 48px; }
   .dropzone { padding: 44px 20px; }
 
-  .study-wrap { padding: 20px 16px 48px; }
+  /* Study sidebar: narrower on tablet */
+  .study-sidebar { width: 260px; }
+  .sidebar-header { padding: 12px 14px; }
+  .sidebar-search-wrap { padding: 10px 12px 8px; }
+  .sidebar-item { padding: 8px 14px; }
+  .study-main { padding: 20px 16px 48px; max-width: none; }
   .card-scroll { padding: 26px 24px; }
   .card-content { font-size: 19px; }
   .rating-row { gap: 8px; }
@@ -441,6 +672,38 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   .rating-btn .r-delay { font-size: 11px; }
   .study-done { padding: 40px 16px; }
   .study-done h2 { font-size: 22px; }
+
+  /* Mobile: sidebar becomes a full-screen overlay; the close button lives
+     inside the sidebar header (icon-row), not in the topbar. */
+  .study-layout { position: relative; }
+  .study-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 300px;
+    max-width: 82vw;
+    z-index: 50;
+    box-shadow: 2px 0 16px rgba(0,0,0,.18);
+    transition: transform .25s ease, opacity .2s ease;
+    transform: translateX(-100%);
+  }
+  .study-sidebar.is-collapsed { transform: translateX(-100%); }
+  .study-sidebar:not(.is-collapsed) { transform: translateX(0); }
+  .study-sidebar.is-hidden { display: none; }
+  .sidebar-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.35); z-index: 49;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  .sidebar-backdrop.is-active { opacity: 1; pointer-events: auto; }
+  .study-main { padding: 14px 12px 40px; max-width: none; }
+  /* On phone the topbar toggle is hidden; the sidebar provides its own close
+     button in its header. The user always has an obvious way to toggle. */
+  .sidebar-toggle { display: none !important; }
+  /* Inside the sidebar on mobile, expose a close button. */
+  .sidebar-close { display: inline-flex; }
 
   .btn { padding: 10px 14px; font-size: 14px; }
 

@@ -2,21 +2,20 @@ import { getSession, setSession, clearSession } from '../state';
 import { clearStates } from '../storage';
 import { loadDeckIndex, deckBySlug, previewUrl } from '../../content/decks';
 import { openPackage } from '../review';
+import type { StudySession } from '../review';
 import { appLinks } from '../../content/render.mjs';
-import { el, qs } from '../dom';
+import { el, qs, onDelegate } from '../dom';
 import {
   RATING_AGAIN,
   RATING_HARD,
   RATING_GOOD,
   RATING_EASY,
 } from '../../core';
-import type { StudySession } from '../review';
 
 export async function renderStudy(outlet: HTMLElement, route: { query: URLSearchParams }): Promise<void> {
   const deckSlug = route.query.get('deck');
   let session = getSession() as StudySession | null;
 
-  // No in-memory session yet, but a deck preview was requested (e.g. from a deck page).
   if (!session && deckSlug) {
     outlet.innerHTML = `<div class="study-wrap"><div class="spinner"></div><p class="muted" style="text-align:center">Loading deck…</p></div>`;
     try {
@@ -55,20 +54,93 @@ function noSession(): string {
 
 type Mode = 'browse' | 'review';
 
+/** Escape HTML, then wrap query matches in <mark> for search highlighting. */
+function highlight(text: string, query: string): string {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  if (!query) return escaped;
+  const q = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escaped.replace(new RegExp(q, 'gi'), (m) => `<mark>${m}</mark>`);
+}
+
 function renderSession(outlet: HTMLElement, session: StudySession): void {
   outlet.replaceChildren();
   const wrap = el('div', { class: 'study-wrap' });
 
+  // ---------- Sidebar (browse-mode card list) ----------
+  const sidebar = el('aside', { class: 'study-sidebar', id: 'browse-sidebar' });
+  const sidebarHeader = el('div', { class: 'sidebar-header' });
+  const sidebarClose = el('button', {
+    type: 'button', class: 'sidebar-close', id: 'sidebar-close',
+    title: 'Hide card list', 'aria-label': 'Hide card list',
+  }, '×');
+  sidebarHeader.append(
+    el('span', { class: 'sidebar-title' }, 'Cards'),
+    el('span', { class: 'sidebar-count', id: 'sidebar-count' }, ''),
+    sidebarClose,
+  );
+
+  const searchWrap = el('div', { class: 'sidebar-search-wrap' });
+  const searchInput = el('input', {
+    type: 'search', class: 'sidebar-search', id: 'sidebar-search',
+    placeholder: 'Search cards…', autocomplete: 'off', spellcheck: 'false',
+  });
+  const clearBtn = el('button', {
+    type: 'button', class: 'sidebar-search-clear', id: 'sidebar-search-clear',
+    title: 'Clear search (Esc)', 'aria-label': 'Clear search',
+  }, '✕');
+  searchWrap.append(searchInput, clearBtn);
+
+  const sidebarList = el('div', { class: 'sidebar-list', id: 'sidebar-list' });
+
+  // Drag-to-scroll on the list. Hold + move scrolls; a quick click still jumps.
+  let dragStartY = 0, dragStartTop = 0, dragMoved = false;
+  sidebarList.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    dragStartY = e.clientY;
+    dragStartTop = sidebarList.scrollTop;
+    dragMoved = false;
+    sidebarList.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (sidebarList.style.cursor !== 'grabbing') return;
+    const dy = e.clientY - dragStartY;
+    if (!dragMoved && Math.abs(dy) > 4) dragMoved = true;
+    sidebarList.scrollTop = dragStartTop - dy;
+    if (dragMoved) e.preventDefault();
+  });
+  window.addEventListener('mouseup', () => {
+    sidebarList.style.cursor = '';
+    setTimeout(() => { dragMoved = false; }, 0);
+  });
+
+  sidebar.append(sidebarHeader, searchWrap, sidebarList);
+
+  // Floating "Show cards" button (mobile only; the topbar toggle is hidden
+  // there because the sidebar is a full-screen overlay).
+  const sidebarFab = el('button', {
+    type: 'button', class: 'sidebar-fab', id: 'sidebar-fab',
+    title: 'Show card list', 'aria-label': 'Show card list',
+  }, '☰ Cards');
+
+  // ---------- Main area ----------
+  const main = el('div', { class: 'study-main' });
   const topbar = el('div', { class: 'study-topbar' });
+  const sidebarToggle = el('button', {
+    class: 'sidebar-toggle', id: 'sidebar-toggle', type: 'button',
+    title: 'Hide card list', 'aria-label': 'Toggle card list',
+  }, '×');
   const title = el('div', { class: 'study-title' }, session.name);
   const meta = el('div', { class: 'study-meta' });
 
-  // Mode toggle: Browse (flip cards freely) / Review (SM-2 spaced repetition).
   const toggle = el('div', { class: 'mode-toggle', role: 'group', 'aria-label': 'Study mode' });
   const browseBtn = el('button', { class: 'mode-btn', type: 'button' }, 'Browse');
   const reviewBtn = el('button', { class: 'mode-btn', type: 'button' }, 'Review');
   toggle.append(browseBtn, reviewBtn);
-  topbar.append(title, toggle, meta);
+  topbar.append(sidebarToggle, title, toggle, meta);
 
   const progress = el('div', { class: 'progress' });
   const progBar = el('span');
@@ -78,10 +150,178 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
   const scroll = el('div', { class: 'card-scroll' });
   const footer = el('div', { class: 'card-footer' });
   stage.append(scroll, footer);
-  wrap.append(topbar, progress, stage);
+  main.append(topbar, progress, stage);
+
+  const layout = el('div', { class: 'study-layout' });
+  const backdrop = el('div', { class: 'sidebar-backdrop', id: 'sidebar-backdrop' });
+  layout.append(sidebar, main, backdrop);
+  wrap.append(layout, sidebarFab);
   outlet.append(wrap);
 
-  let mode: Mode = 'review';
+  // ---------- Sidebar state ----------
+  const allEntries = session.getBrowseEntries();
+  let sidebarOpen = true;
+  let searchQuery = '';
+
+  function isPhone(): boolean {
+    return window.matchMedia('(max-width: 480px)').matches;
+  }
+
+  function updateSidebarToggleUi(): void {
+    if (mode !== 'browse') {
+      sidebarToggle.style.display = 'none';
+      sidebarFab.classList.remove('is-visible');
+      return;
+    }
+    if (isPhone()) {
+      sidebarToggle.style.display = 'none';
+      sidebarFab.classList.toggle('is-visible', !sidebarOpen);
+    } else {
+      sidebarToggle.style.display = '';
+      sidebarFab.classList.remove('is-visible');
+      sidebarToggle.textContent = sidebarOpen ? '×' : '☰';
+      sidebarToggle.title = sidebarOpen ? 'Hide card list' : 'Show card list';
+    }
+  }
+
+  function renderSidebarList(activeIdx: number): void {
+    sidebarList.replaceChildren();
+    const q = searchQuery.toLowerCase();
+    const filtered = q
+      ? allEntries.filter((e) =>
+          e.title.toLowerCase().includes(q) ||
+          e.preview.toLowerCase().includes(q) ||
+          e.deckName.toLowerCase().includes(q))
+      : allEntries;
+
+    const countEl = qs('#sidebar-count', sidebar) as HTMLElement;
+    if (q) countEl.textContent = `${filtered.length} / ${allEntries.length}`;
+    else countEl.textContent = `${allEntries.length}`;
+
+    if (filtered.length === 0) {
+      sidebarList.append(el('div', { class: 'sidebar-empty' }, 'No matching cards'));
+      return;
+    }
+
+    const pad = allEntries.length >= 1000 ? 4 : allEntries.length >= 100 ? 3 : 2;
+    for (const e of filtered) {
+      const item = el('div', {
+        class: 'sidebar-item' + (e.index === activeIdx ? ' is-active' : ''),
+        'data-index': String(e.index),
+        role: 'button',
+        tabindex: '0',
+      });
+      item.append(
+        el('span', { class: 'item-num' }, String(e.index + 1).padStart(pad, '0')),
+        el('span', { class: 'item-title', html: highlight(e.title, q) }),
+      );
+      if (e.preview) item.append(el('span', { class: 'item-preview', html: highlight(e.preview, q) }));
+      if (e.deckName) item.append(el('span', { class: 'item-deck' }, e.deckName));
+      sidebarList.append(item);
+    }
+  }
+
+  function scrollActiveItemIntoView(): void {
+    const active = qs(`[data-index="${browseCursor}"]`, sidebarList) as HTMLElement | null;
+    if (active) active.scrollIntoView({ block: 'nearest' });
+  }
+
+  function jumpToIndex(idx: number): void {
+    if (Number.isNaN(idx) || idx < 0 || idx >= session.browseTotal) return;
+    browseCursor = idx;
+    showAnswer = false;
+    paint();
+    // Per spec: keep the sidebar open after a jump.
+    sidebarOpen = true;
+    sidebar.classList.remove('is-collapsed');
+    backdrop.classList.remove('is-active');
+    updateSidebarToggleUi();
+    scroll.scrollTop = 0;
+    window.scrollTo({ top: 0 });
+  }
+
+  onDelegate(sidebarList, 'click', '.sidebar-item', (target: HTMLElement, e: Event) => {
+    if (dragMoved) { e.preventDefault(); return; }
+    jumpToIndex(Number((target as HTMLElement).dataset.index));
+  });
+  onDelegate(sidebarList, 'keydown', '.sidebar-item', (target: HTMLElement, e: Event) => {
+    const ke = e as KeyboardEvent;
+    if (ke.key === 'Enter' || ke.key === ' ') {
+      ke.preventDefault();
+      jumpToIndex(Number((target as HTMLElement).dataset.index));
+    } else if (ke.key === 'ArrowDown' || ke.key === 'ArrowUp') {
+      ke.preventDefault();
+      const items = Array.from(sidebarList.querySelectorAll<HTMLElement>('.sidebar-item'));
+      const i = items.indexOf(target);
+      const next = items[Math.max(0, Math.min(items.length - 1, i + (ke.key === 'ArrowDown' ? 1 : -1)))];
+      if (next) {
+        next.focus();
+        const idx = Number(next.dataset.index);
+        if (idx !== browseCursor) jumpToIndex(idx);
+      }
+    }
+  });
+
+  function applySearch(): void {
+    searchQuery = (searchInput as HTMLInputElement).value.trim();
+    clearBtn.classList.toggle('is-visible', !!searchQuery);
+    renderSidebarList(browseCursor);
+  }
+  searchInput.addEventListener('input', applySearch);
+  searchInput.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      (searchInput as HTMLInputElement).value = '';
+      applySearch();
+      (searchInput as HTMLInputElement).focus();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const first = sidebarList.querySelector<HTMLElement>('.sidebar-item');
+      if (first) jumpToIndex(Number(first.dataset.index));
+    }
+  });
+  clearBtn.addEventListener('click', () => {
+    (searchInput as HTMLInputElement).value = '';
+    applySearch();
+    (searchInput as HTMLInputElement).focus();
+  });
+
+  if (isPhone()) {
+    sidebarOpen = false;
+    sidebar.classList.add('is-collapsed');
+  }
+
+  sidebarToggle.addEventListener('click', () => {
+    sidebarOpen = !sidebarOpen;
+    sidebar.classList.toggle('is-collapsed', !sidebarOpen);
+    if (isPhone()) backdrop.classList.toggle('is-active', sidebarOpen);
+    updateSidebarToggleUi();
+  });
+  sidebarClose.addEventListener('click', () => {
+    if (!sidebarOpen) return;
+    sidebarOpen = false;
+    sidebar.classList.add('is-collapsed');
+    backdrop.classList.remove('is-active');
+    updateSidebarToggleUi();
+  });
+  sidebarFab.addEventListener('click', () => {
+    if (sidebarOpen) return;
+    sidebarOpen = true;
+    sidebar.classList.remove('is-collapsed');
+    backdrop.classList.add('is-active');
+    updateSidebarToggleUi();
+  });
+  backdrop.addEventListener('click', () => {
+    sidebarOpen = false;
+    sidebar.classList.add('is-collapsed');
+    backdrop.classList.remove('is-active');
+    updateSidebarToggleUi();
+  });
+  window.matchMedia('(max-width: 480px)').addEventListener?.('change', () => {
+    if (!isPhone()) backdrop.classList.remove('is-active');
+  });
+
+  let mode: Mode = 'browse';
   let showAnswer = false;
   let browseCursor = 0;
 
@@ -90,6 +330,15 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     showAnswer = false;
     browseBtn.classList.toggle('is-active', m === 'browse');
     reviewBtn.classList.toggle('is-active', m === 'review');
+    if (m === 'browse') {
+      sidebar.classList.remove('is-hidden');
+      if (sidebarOpen) sidebar.classList.remove('is-collapsed');
+      if (isPhone()) backdrop.classList.toggle('is-active', sidebarOpen);
+    } else {
+      sidebar.classList.add('is-hidden');
+      backdrop.classList.remove('is-active');
+    }
+    updateSidebarToggleUi();
     paint();
   }
 
@@ -140,7 +389,6 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
 
     const rendered = session.renderCurrent();
     if (!rendered) {
-      // Card could not be rendered (missing note/notetype) — skip it.
       session.answer(RATING_GOOD);
       paint();
       return;
@@ -198,7 +446,6 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     }
     const rendered = session.renderState(st);
     if (!rendered) {
-      // Skip unrenderable cards silently while browsing.
       if (browseCursor < total - 1) {
         browseCursor++;
         paintBrowse();
@@ -236,6 +483,10 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     row.append(prev, show, next);
     footer.append(row);
     updateMeta();
+
+    // Update active item + keep it visible so long lists stay usable.
+    renderSidebarList(browseCursor);
+    scrollActiveItemIntoView();
   }
 
   function paint(): void {
@@ -245,5 +496,5 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
 
   browseBtn.addEventListener('click', () => setMode('browse'));
   reviewBtn.addEventListener('click', () => setMode('review'));
-  setMode('review');
+  setMode('browse');
 }
