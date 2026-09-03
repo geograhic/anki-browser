@@ -226,8 +226,6 @@ const en = {
       noteToOwner: 'Note to the moderator',
       noteToOwnerPh: 'Anything the moderator should know?',
       consent: 'I have the right to share this deck and I accept the {{terms}} and {{content}}.',
-      termsLink: 'Terms',
-      contentLink: 'Content policy',
     },
     consentRequired: 'Please confirm you have the right to share this deck.',
     submitButton: 'Submit for review',
