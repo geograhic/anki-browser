@@ -133,24 +133,29 @@ function select(id: string, label: string, options: { value: string; text: strin
 /**
  * The consent checkbox text embeds links to the Terms and Content-policy
  * pages. We splice in real `<a target="_blank">` markup via i18n vars instead
- * of the literal `{terms}` / `{content}` placeholders so the placeholders
- * never leak through to visitors.
+ * of the literal placeholders so they never leak through to visitors.
+ *
+ * The site is served under a base path (`/anki-browser/`), so the links must
+ * carry that prefix — a bare `/zh/terms/` would resolve to the zone root and
+ * 404. Build the hrefs from `import.meta.env.BASE_URL` like every other link
+ * on the site.
  */
 function consentLabelHtml(): string {
   const lang = getLang();
+  const base = (((import.meta as any).env?.BASE_URL as string) || '/anki-browser/').replace(/\/+$/, '');
   const links =
     lang === 'zh'
       ? {
           terms:
-            '<a href="/zh/terms/" target="_blank" rel="noopener">服务条款</a>',
+            `<a href="${base}/zh/terms/" target="_blank" rel="noopener">服务条款</a>`,
           content:
-            '<a href="/zh/content-policy/" target="_blank" rel="noopener">内容与版权</a>',
+            `<a href="${base}/zh/content-policy/" target="_blank" rel="noopener">内容与版权</a>`,
         }
       : {
           terms:
-            '<a href="/terms/" target="_blank" rel="noopener">Terms</a>',
+            `<a href="${base}/terms/" target="_blank" rel="noopener">Terms</a>`,
           content:
-            '<a href="/content-policy/" target="_blank" rel="noopener">Content &amp; copyright</a>',
+            `<a href="${base}/content-policy/" target="_blank" rel="noopener">Content &amp; copyright</a>`,
         };
   // t() replaces {{terms}} / {{content}} with the raw HTML above. The HTML
   // here is constant code (never user input), so it is safe to drop into the
