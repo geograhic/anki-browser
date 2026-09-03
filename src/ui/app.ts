@@ -53,6 +53,9 @@ const LEGAL_KINDS: Record<string, LegalKind> = {
 const NAV_KEYS = new Set(['home', 'open', 'submit', 'faq', 'about']);
 
 function activeKey(first: string): string {
+  // `open` is a nav item but language-neutral (not in MIRROR_KEYS), so check
+  // the visible nav keys first, then resolve mirrored routes (faq, submit…).
+  if (NAV_KEYS.has(first)) return first;
   const k = MIRROR_KEYS[first] ?? '';
   return NAV_KEYS.has(k) ? k : '';
 }
