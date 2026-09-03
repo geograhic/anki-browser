@@ -6,11 +6,13 @@
   "description": "Browser-based Anki deck viewer and reviewer. Parses .apkg / .colpkg entirely client-side.",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/copy-wasm.mjs && vite build && node scripts/generate-seo.mjs",
+    "build": "node scripts/check-i18n.mjs && node scripts/copy-wasm.mjs && vite build && node scripts/generate-seo.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test:parse": "node scripts/parse-test.mjs",
-    "verify": "node scripts/verify-browser.mjs"
+    "verify": "node scripts/verify-browser.mjs",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "deploy:api": "node scripts/deploy-worker.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.2",

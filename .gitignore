@@ -12,3 +12,6 @@ __pycache__/
 *.pyc
 verify-*.png
 debug-*.png
+
+# worker build artifact
+worker/.build/

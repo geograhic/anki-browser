@@ -3,16 +3,17 @@ import { setSession } from '../state';
 import { saveLastFile } from '../storage';
 import { qs } from '../dom';
 import { navigate } from '../router';
+import { t } from '../i18n';
 
 export function renderOpen(outlet: HTMLElement): void {
   outlet.innerHTML = `
     <div class="open-wrap">
-      <h1>Open an Anki deck</h1>
-      <p class="muted">Choose an <code>.apkg</code> (shared deck) or <code>.colpkg</code> (full collection backup). Parsing happens entirely on your device.</p>
+      <h1>${t('open.title')}</h1>
+      <p class="muted">${t('open.lead')}</p>
       <div class="dropzone" id="dz">
-        <h2>Drop your file here</h2>
-        <p>or</p>
-        <button class="btn btn-primary" id="pick" type="button">Choose file</button>
+        <h2>${t('open.drop')}</h2>
+        <p>${t('open.or')}</p>
+        <button class="btn btn-primary" id="pick" type="button">${t('open.choose')}</button>
         <input type="file" id="file" accept=".apkg,.colpkg,application/zip" />
       </div>
       <div id="status"></div>
@@ -50,10 +51,13 @@ export function renderOpen(outlet: HTMLElement): void {
   });
 
   async function handle(file: File): Promise<void> {
-    status.innerHTML = `<p class="parsing-note">Reading ${escape(file.name)} (${(file.size / 1048576).toFixed(1)} MB)…</p>`;
+    status.innerHTML = `<p class="parsing-note">${t('open.reading', {
+      name: escape(file.name),
+      size: (file.size / 1048576).toFixed(1),
+    })}</p>`;
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
-      status.innerHTML = `<p class="parsing-note">Parsing collection…</p>`;
+      status.innerHTML = `<p class="parsing-note">${t('open.parsing')}</p>`;
       const session = await openPackage(bytes, file.name);
       setSession(session);
       // Keep the file around so a reload (or any in-app navigation) does not
@@ -61,7 +65,9 @@ export function renderOpen(outlet: HTMLElement): void {
       void saveLastFile(file.name, bytes);
       navigate('#/study');
     } catch (err) {
-      status.innerHTML = `<div class="error-note">Could not open this file: ${(err as Error).message}</div>`;
+      status.innerHTML = `<div class="error-note">${t('open.failed', {
+        message: (err as Error).message,
+      })}</div>`;
     }
   }
 }

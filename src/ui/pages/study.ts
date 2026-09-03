@@ -5,6 +5,7 @@ import { openPackage } from '../review';
 import type { StudySession } from '../review';
 import { appLinks } from '../../content/render.mjs';
 import { el, qs, onDelegate } from '../dom';
+import { t } from '../i18n';
 import {
   RATING_AGAIN,
   RATING_HARD,
@@ -18,7 +19,7 @@ export async function renderStudy(outlet: HTMLElement, route: { query: URLSearch
 
   // No in-memory session yet, but a deck preview was requested (e.g. from a deck page).
   if (!session && deckSlug) {
-    outlet.innerHTML = `<div class="study-wrap"><div class="spinner"></div><p class="muted" style="text-align:center">Loading deck…</p></div>`;
+    outlet.innerHTML = `<div class="study-wrap"><div class="spinner"></div><p class="muted" style="text-align:center">${t("study.loading")}</p></div>`;
     try {
       const decks = await loadDeckIndex();
       const deck = deckBySlug(decks, deckSlug);
@@ -43,7 +44,7 @@ export async function renderStudy(outlet: HTMLElement, route: { query: URLSearch
   if (!session) {
     const last = await loadLastFile();
     if (last) {
-      outlet.innerHTML = `<div class="study-wrap"><div class="spinner"></div><p class="muted" style="text-align:center">Restoring…</p></div>`;
+      outlet.innerHTML = `<div class="study-wrap"><div class="spinner"></div><p class="muted" style="text-align:center">${t("study.restoring")}</p></div>`;
       try {
         session = await openPackage(last.bytes, last.name);
         setSession(session);
@@ -67,9 +68,9 @@ export async function renderStudy(outlet: HTMLElement, route: { query: URLSearch
 function noSession(): string {
   return `
     <div class="study-wrap">
-      <h1>No deck loaded</h1>
-      <p class="muted">Open an <code>.apkg</code> / <code>.colpkg</code> file to start browsing or reviewing.</p>
-      <p><a class="btn btn-primary" href="${appLinks.open()}">Open a file</a></p>
+      <h1>${t("study.noDeck")}</h1>
+      <p class="muted">${t("study.openHint")}</p>
+      <p><a class="btn btn-primary" href="${appLinks.open()}">${t("study.openFile")}</a></p>
     </div>`;
 }
 
@@ -96,10 +97,10 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
   const sidebarHeader = el('div', { class: 'sidebar-header' });
   const sidebarClose = el('button', {
     type: 'button', class: 'sidebar-close', id: 'sidebar-close',
-    title: 'Hide card list', 'aria-label': 'Hide card list',
+    title: t('study.hideList'), 'aria-label': t('study.hideList'),
   }, '×');
   sidebarHeader.append(
-    el('span', { class: 'sidebar-title' }, 'Cards'),
+    el('span', { class: 'sidebar-title' }, t('study.cards')),
     el('span', { class: 'sidebar-count', id: 'sidebar-count' }, ''),
     sidebarClose,
   );
@@ -107,11 +108,11 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
   const searchWrap = el('div', { class: 'sidebar-search-wrap' });
   const searchInput = el('input', {
     type: 'search', class: 'sidebar-search', id: 'sidebar-search',
-    placeholder: 'Search cards…', autocomplete: 'off', spellcheck: 'false',
+    placeholder: t('study.searchPh'), autocomplete: 'off', spellcheck: 'false',
   });
   const clearBtn = el('button', {
     type: 'button', class: 'sidebar-search-clear', id: 'sidebar-search-clear',
-    title: 'Clear search (Esc)', 'aria-label': 'Clear search',
+    title: t('study.clearSearch'), 'aria-label': t('study.clearSearch'),
   }, '✕');
   searchWrap.append(searchInput, clearBtn);
 
@@ -144,22 +145,22 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
   // there because the sidebar is a full-screen overlay).
   const sidebarFab = el('button', {
     type: 'button', class: 'sidebar-fab', id: 'sidebar-fab',
-    title: 'Show card list', 'aria-label': 'Show card list',
-  }, '☰ Cards');
+    title: t('study.showList'), 'aria-label': t('study.showList'),
+  }, '☰ ' + t('study.cards'));
 
   // ---------- Main area ----------
   const main = el('div', { class: 'study-main' });
   const topbar = el('div', { class: 'study-topbar' });
   const sidebarToggle = el('button', {
     class: 'sidebar-toggle', id: 'sidebar-toggle', type: 'button',
-    title: 'Hide card list', 'aria-label': 'Toggle card list',
+    title: t('study.hideList'), 'aria-label': t('study.toggleList'),
   }, '×');
   const title = el('div', { class: 'study-title' }, session.name);
   const meta = el('div', { class: 'study-meta' });
 
-  const toggle = el('div', { class: 'mode-toggle', role: 'group', 'aria-label': 'Study mode' });
-  const browseBtn = el('button', { class: 'mode-btn', type: 'button' }, 'Browse');
-  const reviewBtn = el('button', { class: 'mode-btn', type: 'button' }, 'Review');
+  const toggle = el('div', { class: 'mode-toggle', role: 'group', 'aria-label': t('study.modeAria') });
+  const browseBtn = el('button', { class: 'mode-btn', type: 'button' }, t('study.browse'));
+  const reviewBtn = el('button', { class: 'mode-btn', type: 'button' }, t('study.review'));
   toggle.append(browseBtn, reviewBtn);
   topbar.append(sidebarToggle, title, toggle, meta);
 
@@ -201,7 +202,7 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
       sidebarToggle.style.display = '';
       sidebarFab.classList.remove('is-visible');
       sidebarToggle.textContent = sidebarOpen ? '×' : '☰';
-      sidebarToggle.title = sidebarOpen ? 'Hide card list' : 'Show card list';
+      sidebarToggle.title = sidebarOpen ? t('study.hideList') : t('study.showList');
     }
   }
 
@@ -217,7 +218,7 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     else countEl.textContent = `${allEntries.length}`;
 
     if (filtered.length === 0) {
-      sidebarList.append(el('div', { class: 'sidebar-empty' }, 'No matching cards'));
+      sidebarList.append(el('div', { class: 'sidebar-empty' }, t('study.noMatch')));
       return;
     }
 
@@ -363,23 +364,23 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
   function updateMeta(): void {
     if (mode === 'browse') {
       const shown = browseCursor + 1;
-      meta.textContent = `Card ${shown} / ${session.browseTotal} · Browse`;
+      meta.textContent = t("study.browseMeta", { shown, total: session.browseTotal });
       progBar.style.width = session.browseTotal ? Math.round((shown / session.browseTotal) * 100) + '%' : '0%';
     } else {
-      meta.textContent = `${session.remaining} due · ${session.total} cards`;
+      meta.textContent = t("study.reviewMeta", { due: session.remaining, total: session.total });
       progBar.style.width = session.progress() + '%';
     }
   }
 
   function paintCardContent(rendered: { questionHtml: string; answerHtml: string }): void {
     scroll.innerHTML = `
-      <div class="card-side-label">Question</div>
+      <div class="card-side-label">${t("study.question")}</div>
       <div class="card-content">${rendered.questionHtml}</div>
       <div id="answer-area"></div>`;
     if (showAnswer) {
       const area = qs('#answer-area', scroll);
       if (area) {
-        area.innerHTML = `<hr id="answer"><div class="card-side-label">Answer</div><div class="card-content">${rendered.answerHtml}</div>`;
+        area.innerHTML = `<hr id="answer"><div class="card-side-label">${t("study.answer")}</div><div class="card-content">${rendered.answerHtml}</div>`;
       }
     }
   }
@@ -389,11 +390,11 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     if (!cur) {
       scroll.innerHTML = `
         <div class="study-done">
-          <h2>All caught up</h2>
-          <p class="muted">Nothing is due right now. Come back later, or reset progress for this deck.</p>
+          <h2>${t("study.caughtUp")}</h2>
+          <p class="muted">${t("study.noDue")}</p>
         </div>`;
       footer.replaceChildren();
-      const reset = el('button', { class: 'btn btn-secondary', type: 'button' }, 'Reset progress');
+      const reset = el('button', { class: 'btn btn-secondary', type: 'button' }, t('study.resetProgress'));
       reset.addEventListener('click', async () => {
         await clearStates(session.deckKey);
         clearSession();
@@ -419,10 +420,10 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     if (showAnswer) {
       const row = el('div', { class: 'rating-row' });
       const defs = [
-        { rating: RATING_AGAIN, label: 'Again', cls: 'again' },
-        { rating: RATING_HARD, label: 'Hard', cls: 'hard' },
-        { rating: RATING_GOOD, label: 'Good', cls: 'good' },
-        { rating: RATING_EASY, label: 'Easy', cls: 'easy' },
+        { rating: RATING_AGAIN, label: t('study.rating.again'), cls: 'again' },
+        { rating: RATING_HARD, label: t('study.rating.hard'), cls: 'hard' },
+        { rating: RATING_GOOD, label: t('study.rating.good'), cls: 'good' },
+        { rating: RATING_EASY, label: t('study.rating.easy'), cls: 'easy' },
       ] as const;
       for (const d of defs) {
         const btn = el('button', { class: `rating-btn ${d.cls}`, type: 'button' });
@@ -437,7 +438,7 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
       }
       footer.append(row);
     } else {
-      const show = el('button', { class: 'btn btn-primary', type: 'button' }, 'Show Answer');
+      const show = el('button', { class: 'btn btn-primary', type: 'button' }, t('study.showAnswer'));
       show.addEventListener('click', () => {
         showAnswer = true;
         paint();
@@ -455,8 +456,8 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     if (!st || total === 0) {
       scroll.innerHTML = `
         <div class="study-done">
-          <h2>Nothing to browse</h2>
-          <p class="muted">This deck contains no cards.</p>
+          <h2>${t("study.nothingToBrowse")}</h2>
+          <p class="muted">${t("study.noCards")}</p>
         </div>`;
       footer.replaceChildren();
       updateMeta();
@@ -475,9 +476,9 @@ function renderSession(outlet: HTMLElement, session: StudySession): void {
     footer.replaceChildren();
 
     const row = el('div', { class: 'browse-row' });
-    const prev = el('button', { class: 'btn btn-secondary browse-nav', type: 'button' }, '‹ Prev');
-    const show = el('button', { class: 'btn btn-primary', type: 'button' }, showAnswer ? 'Hide Answer' : 'Show Answer');
-    const next = el('button', { class: 'btn btn-secondary browse-nav', type: 'button' }, 'Next ›');
+    const prev = el('button', { class: 'btn btn-secondary browse-nav', type: 'button' }, t('study.prev'));
+    const show = el('button', { class: 'btn btn-primary', type: 'button' }, showAnswer ? t('study.hideAnswer') : t('study.showAnswer'));
+    const next = el('button', { class: 'btn btn-secondary browse-nav', type: 'button' }, t('study.next'));
     prev.disabled = browseCursor <= 0;
     next.disabled = browseCursor >= total - 1;
     prev.addEventListener('click', () => {

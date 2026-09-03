@@ -722,3 +722,290 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   .site-footer { margin-top: 36px; padding: 16px 14px 28px; }
   .site-footer-line { font-size: 12.5px; }
 }
+
+/* ========================================================================
+   i18n language switch + new pages (submit / admin / legal / faq)
+   Appended last on purpose: only NEW selectors live here, so none of the
+   responsive rules above can be overridden by accident.
+   ======================================================================== */
+
+/* --------------------------- Language switch ---------------------------- */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 7px 12px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.lang-switch:hover {
+  text-decoration: none;
+  color: var(--blue);
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+.lang-switch-globe { font-size: 12px; line-height: 1; opacity: .75; }
+.lang-switch-text { letter-spacing: .3px; }
+
+/* --------------------- Submit entry card (home grid) -------------------- */
+.deck-card-share {
+  border-style: dashed;
+  border-color: var(--line);
+  background: var(--panel-2);
+}
+.deck-card-share:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+.deck-cover-share { background: var(--blue); }
+.deck-card-cta {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--blue);
+}
+
+/* --------------------------- Content pages ------------------------------ */
+.content-page { padding: 32px 0 24px; max-width: 860px; margin: 0 auto; }
+.container .content-page,
+main > .container .content-page { padding-left: 0; padding-right: 0; }
+main > .container > .content-page { }
+.content-page h1 { font-size: 30px; margin: 0 0 10px; }
+.content-page p.lead { font-size: 16.5px; color: var(--muted); margin: 0 0 6px; }
+.page-updated { font-size: 13px; margin: 0 0 18px; }
+.content-page-body { margin-top: 18px; }
+.content-page-body h2 { font-size: 20px; margin: 26px 0 10px; }
+.content-page-body h3 { font-size: 16.5px; margin: 18px 0 6px; }
+.content-page-body ul li { margin: 6px 0; }
+.content-page-actions { margin-top: 24px; }
+main > .container .content-page,
+#outlet > .container .content-page { padding-left: 0; padding-right: 0; }
+
+/* ------------------------------ Forms ----------------------------------- */
+.submit-form {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 26px 28px 30px;
+  margin-top: 24px;
+}
+.form-field { margin-bottom: 18px; }
+.form-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.form-field .req { color: var(--again); }
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(45, 127, 249, .14);
+}
+.form-field textarea { resize: vertical; }
+.form-field input.is-invalid,
+.form-field textarea.is-invalid { border-color: var(--again); }
+.form-help { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+.form-error { font-size: 13px; color: var(--again); margin: 6px 0 0; font-weight: 550; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-more { margin: 4px 0 18px; border: 1px solid var(--line-soft); background: var(--panel-2); }
+.form-more > summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--blue);
+  user-select: none;
+}
+.form-more-hint { margin-left: 10px; font-weight: 500; font-size: 12.5px; color: var(--muted); }
+.form-more-body { padding: 4px 16px 16px; }
+.form-consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  color: var(--text);
+  margin: 6px 0 4px;
+}
+.form-consent input { margin-top: 3px; }
+.form-actions { margin-top: 16px; }
+.btn-lg { padding: 13px 28px; font-size: 15.5px; }
+
+.submit-signin-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 26px 28px;
+  margin-top: 24px;
+}
+.submit-signin-card h2 { margin: 0 0 8px; font-size: 19px; }
+.submit-signin-card .btn { margin-top: 14px; }
+
+.submit-session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 22px;
+}
+.session-avatar { width: 28px; height: 28px; border: 1px solid var(--line); }
+.session-logout { margin-left: auto; padding: 6px 12px; font-size: 13px; }
+
+.submit-success {
+  border: 1px solid var(--good);
+  background: #f0f9f3;
+  padding: 18px 20px;
+  margin-top: 18px;
+}
+.submit-success h3 { margin: 0 0 6px; color: var(--good); }
+.submit-success-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+/* --------------------------- My submissions ----------------------------- */
+.my-submissions { margin-top: 40px; }
+.my-submissions h2 { font-size: 20px; margin: 0 0 14px; }
+.sub-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.sub-card-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sub-card-title { font-weight: 650; color: var(--ink); }
+.sub-card-meta { font-size: 12.5px; margin: 6px 0 0; }
+.sub-comment {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--blue);
+  background: var(--panel-2);
+  font-size: 14px;
+}
+.sub-comment p { margin: 0 0 4px; }
+.sub-comment footer { font-size: 12.5px; color: var(--muted); }
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--panel-2);
+}
+.status-pending { color: var(--hard); border-color: var(--hard); background: #fdf6ec; }
+.status-approved { color: var(--good); border-color: var(--good); background: #f0f9f3; }
+.status-rejected { color: var(--again); border-color: var(--again); background: #fdf1f0; }
+
+/* ------------------------------- Admin ---------------------------------- */
+.admin-wrap { padding: 32px 20px 48px; }
+.admin-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.admin-head h1 { margin: 0; font-size: 26px; }
+.admin-session { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
+.admin-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin: 22px 0 0; flex-wrap: wrap; }
+.admin-tab {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.admin-tab:hover { color: var(--ink); }
+.admin-tab.is-active { color: var(--blue); border-bottom-color: var(--blue); }
+.admin-tab-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  font-size: 11.5px;
+  background: var(--line-soft);
+  color: var(--text);
+}
+.admin-body { padding-top: 20px; }
+.admin-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.admin-card-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.admin-card-title { font-weight: 650; color: var(--ink); font-size: 15.5px; }
+.admin-card-grid { display: flex; gap: 16px; margin-top: 12px; }
+.admin-cover { width: 120px; height: 68px; object-fit: cover; border: 1px solid var(--line-soft); }
+.admin-card-kv { flex: 1; min-width: 0; }
+.kv { display: flex; gap: 10px; font-size: 13.5px; margin: 3px 0; }
+.kv-k { flex: 0 0 130px; color: var(--muted); }
+.kv-v { min-width: 0; word-break: break-all; }
+.admin-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.admin-reject-box {
+  margin-top: 12px;
+  border: 1px dashed var(--line);
+  background: var(--panel-2);
+  padding: 12px 14px;
+}
+.admin-reject-box label { font-size: 13.5px; font-weight: 650; display: block; margin-bottom: 6px; }
+.admin-reject-box textarea {
+  width: 100%;
+  padding: 8px 10px;
+  font-family: var(--font);
+  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.admin-reject-actions { display: flex; gap: 10px; margin-top: 10px; }
+.admin-flash {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--good);
+  background: #f0f9f3;
+  color: var(--good);
+  font-size: 14px;
+  font-weight: 600;
+  word-break: break-all;
+}
+.admin-table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); }
+.admin-table td { padding: 12px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+.admin-table tr:last-child td { border-bottom: none; }
+.pub-cover .deck-cover-gen, .pub-cover .deck-cover-img { width: 64px; height: 40px; }
+.pub-cover .deck-cover-gen span { font-size: 18px; }
+.pub-actions { text-align: right; }
+
+/* ------------------------------ Responsive ------------------------------ */
+@media (max-width: 768px) {
+  .submit-form { padding: 20px 18px 24px; }
+  .admin-card-grid { flex-direction: column; }
+  .admin-cover { width: 100%; height: 120px; }
+  .content-page h1 { font-size: 25px; }
+}
+
+@media (max-width: 480px) {
+  /* 5 nav items + brand no longer fit in one row: let the nav scroll. */
+  .site-header-inner { height: auto; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; row-gap: 2px; }
+  .site-nav { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .site-nav::-webkit-scrollbar { display: none; }
+  .lang-switch { margin-left: auto; padding: 6px 10px; }
+  .form-row { grid-template-columns: 1fr; }
+  .kv-k { flex-basis: 96px; }
+}
