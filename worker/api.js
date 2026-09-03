@@ -197,6 +197,54 @@ async function ensureLabels(token) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Pipeline-failure alert                                                      */
+/* -------------------------------------------------------------------------- */
+
+// Throttle identical alerts inside one isolate so a sustained outage doesn't
+// open a new issue every request. 5 min is short enough to be useful, long
+// enough to dedupe bursts.
+const ALERT_COOLDOWN_MS = 5 * 60 * 1000;
+const ALERT_RECENT = new Map();
+
+/** GitHub 401/403 = a credential is bad/expired/revoked. Worth alerting the owner. */
+function isAuthError(status) {
+  return status === 401 || status === 403;
+}
+
+/**
+ * Best-effort: fire a `repository_dispatch` so the owner gets a GitHub issue
+ * (and email, if subscribed) when the submission / moderation pipeline breaks.
+ * `gh()` never throws on HTTP errors, so this is safe to call from a hot path.
+ *
+ * Note: this dispatches using the same BOT_TOKEN that may itself be broken.
+ * If the dispatch 401s, we cannot tell the owner from the repo — the
+ * visitor-facing failure (the original 5xx we returned) is the fallback.
+ */
+async function notifyPipelineError(reason, endpoint, token) {
+  const key = `${endpoint}::${reason.slice(0, 80)}`;
+  const now = Date.now();
+  const last = ALERT_RECENT.get(key) || 0;
+  if (now - last < ALERT_COOLDOWN_MS) return;
+  ALERT_RECENT.set(key, now);
+  try {
+    await gh(`/repos/${MAIN_REPO_NAME}/dispatches`, {
+      method: 'POST',
+      token,
+      body: {
+        event_type: 'pipeline-error',
+        client_payload: {
+          reason: String(reason).slice(0, 500),
+          endpoint: String(endpoint).slice(0, 120),
+          ts: new Date().toISOString(),
+        },
+      },
+    });
+  } catch {
+    /* best effort — see note above */
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* Submission payload <-> issue body                                          */
 /* -------------------------------------------------------------------------- */
 
@@ -372,11 +420,21 @@ async function handleOauthCallback(request, env, url) {
   const tokenData = await tokenRes.json().catch(() => ({}));
   const accessToken = tokenData.access_token;
   if (!accessToken) {
+    void notifyPipelineError(
+      `OAuth token exchange failed: ${JSON.stringify(tokenData).slice(0, 200)}`,
+      'GET /oauth/callback',
+      env.BOT_TOKEN,
+    );
     return Response.redirect(`${ORIGIN}${next}#submission-error`, 302);
   }
 
   const me = await gh('/user', { token: accessToken });
   if (!me.ok) {
+    void notifyPipelineError(
+      `OAuth profile lookup failed: ${me.status} ${JSON.stringify(me.data).slice(0, 200)}`,
+      'GET /oauth/callback (me)',
+      env.BOT_TOKEN,
+    );
     return Response.redirect(`${ORIGIN}${next}#submission-error`, 302);
   }
 
@@ -465,6 +523,13 @@ async function handleCreateSubmission(request, env) {
     },
   });
   if (!issue.ok) {
+    if (isAuthError(issue.status)) {
+      void notifyPipelineError(
+        `Create submission issue failed: ${issue.status} ${JSON.stringify(issue.data).slice(0, 200)}`,
+        'POST /submissions (create issue)',
+        env.BOT_TOKEN,
+      );
+    }
     return json({ error: 'error' }, { status: 502 });
   }
   return json({ number: issue.data.number, htmlUrl: issue.data.html_url });
@@ -511,6 +576,12 @@ async function handleAdminOverview(request, env) {
     } catch {
       decks = [];
     }
+  } else if (isAuthError(index.status)) {
+    void notifyPipelineError(
+      `Read index.json failed: ${index.status} ${JSON.stringify(index.data).slice(0, 200)}`,
+      'GET /admin/overview (read index)',
+      env.BOT_TOKEN,
+    );
   }
   return json({ submissions, decks, moderator: user.login });
 }
@@ -584,7 +655,16 @@ async function handleModerate(request, env) {
       decks,
       `deck(submission): publish "${deck.title}" by @${payload.submittedBy} (#${number})`,
     );
-    if (!commit.ok) return json({ error: 'commit_failed' }, { status: 502 });
+    if (!commit.ok) {
+      if (isAuthError(commit.status)) {
+        void notifyPipelineError(
+          `Approve: commit index.json failed: ${commit.status} (issue #${number})`,
+          'POST /admin/moderate (approve)',
+          env.BOT_TOKEN,
+        );
+      }
+      return json({ error: 'commit_failed' }, { status: 502 });
+    }
 
     const deckUrl = `${ORIGIN}${APP_BASE}/deck/${deck.slug}/`;
     await gh(`/repos/${SUBMISSIONS_REPO_NAME}/issues/${number}/labels`, {
@@ -642,7 +722,16 @@ async function handleModerate(request, env) {
     if (!deck) return json({ error: 'not_found' }, { status: 404 });
     const next = decks.filter((d) => d.slug !== slug);
     const commit = await commitIndex(env, next, `deck: unpublish "${deck.title}" (${slug}) after review`);
-    if (!commit.ok) return json({ error: 'commit_failed' }, { status: 502 });
+    if (!commit.ok) {
+      if (isAuthError(commit.status)) {
+        void notifyPipelineError(
+          `Unpublish: commit index.json failed: ${commit.status} (slug ${slug})`,
+          'POST /admin/moderate (unpublish)',
+          env.BOT_TOKEN,
+        );
+      }
+      return json({ error: 'commit_failed' }, { status: 502 });
+    }
 
     // Close the loop on the original submission ticket, if there is one.
     const issues = await listSubmissionIssues(env.BOT_TOKEN);

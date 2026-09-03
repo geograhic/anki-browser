@@ -17,7 +17,7 @@ import {
   type SubmissionInput,
 } from '../../services/submissions';
 import { qs } from '../dom';
-import { t } from '../i18n';
+import { t, getLang } from '../i18n';
 import type { PageContext } from './context';
 
 const LANG_OPTIONS: { value: string; key: string }[] = [
@@ -130,6 +130,34 @@ function select(id: string, label: string, options: { value: string; text: strin
   </div>`;
 }
 
+/**
+ * The consent checkbox text embeds links to the Terms and Content-policy
+ * pages. We splice in real `<a target="_blank">` markup via i18n vars instead
+ * of the literal `{terms}` / `{content}` placeholders so the placeholders
+ * never leak through to visitors.
+ */
+function consentLabelHtml(): string {
+  const lang = getLang();
+  const links =
+    lang === 'zh'
+      ? {
+          terms:
+            '<a href="/zh/terms/" target="_blank" rel="noopener">服务条款</a>',
+          content:
+            '<a href="/zh/content-policy/" target="_blank" rel="noopener">内容与版权</a>',
+        }
+      : {
+          terms:
+            '<a href="/terms/" target="_blank" rel="noopener">Terms</a>',
+          content:
+            '<a href="/content-policy/" target="_blank" rel="noopener">Content &amp; copyright</a>',
+        };
+  // t() replaces {{terms}} / {{content}} with the raw HTML above. The HTML
+  // here is constant code (never user input), so it is safe to drop into the
+  // label without escaping.
+  return t('submit.field.consent', links);
+}
+
 function formHtml(): string {
   const langOptions = LANG_OPTIONS.map((o) => ({ value: o.value, text: t(o.key) }));
   const licenseOptions = SUPPORTED_LICENSES.map((l) => ({ value: l, text: l }));
@@ -205,7 +233,7 @@ function formHtml(): string {
 
     <label class="form-consent">
       <input type="checkbox" id="f-consent">
-      <span>${esc(t('submit.field.consent'))}</span>
+      <span>${consentLabelHtml()}</span>
     </label>
     <p class="form-error" data-error-for="consent" hidden></p>
 

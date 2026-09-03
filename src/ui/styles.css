@@ -545,6 +545,17 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
   padding: 20px 20px 36px;
   text-align: center;
 }
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 22px;
+  margin: 0 0 14px;
+  padding: 0;
+}
+.site-footer-links li { list-style: none; }
+.site-footer-links a { padding: 2px 0; }
 .site-footer-line {
   margin: 0;
   color: var(--muted);
@@ -770,7 +781,7 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 }
 
 /* --------------------------- Content pages ------------------------------ */
-.content-page { padding: 32px 0 24px; max-width: 860px; margin: 0 auto; }
+.content-page { padding: 32px 20px 24px; max-width: 860px; margin: 0 auto; }
 .container .content-page,
 main > .container .content-page { padding-left: 0; padding-right: 0; }
 main > .container > .content-page { }

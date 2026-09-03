@@ -49,10 +49,12 @@ const LEGAL_KINDS: Record<string, LegalKind> = {
   contact: 'contact',
 };
 
+/** Nav items that should highlight when the matching route is active. */
+const NAV_KEYS = new Set(['home', 'open', 'submit', 'faq', 'about']);
+
 function activeKey(first: string): string {
-  if (first === 'open') return 'open';
-  if (first === 'about') return 'about';
-  return 'home';
+  const k = MIRROR_KEYS[first] ?? '';
+  return NAV_KEYS.has(k) ? k : '';
 }
 
 export function renderApp(): void {

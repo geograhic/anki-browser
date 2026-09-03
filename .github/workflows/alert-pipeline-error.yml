@@ -1,0 +1,32 @@
+name: alert-pipeline-error
+
+# Triggered by the anki-browser-api Worker via repository_dispatch when the
+# submission / moderation pipeline fails (e.g. the GitHub PAT that backs
+# BOT_TOKEN expires or is revoked, or the OAuth client_secret is rotated).
+# Opens / updates a labelled issue in this repository so the owner is
+# notified on GitHub itself — independent of any external service.
+#
+# The dispatch fires from the Worker on a best-effort basis: if the same
+# token that is failing is also the one used to call the dispatch endpoint,
+# no alert can reach the repo. The owner must then rely on user-facing
+# failure reports to notice.
+
+on:
+  repository_dispatch:
+    types: [pipeline-error]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open or update pipeline-error issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REASON: ${{ github.event.client_payload.reason }}
+          TS: ${{ github.event.client_payload.ts }}
+          ENDPOINT: ${{ github.event.client_payload.endpoint }}
+        run: node .github/scripts/alert-pipeline-error.mjs
