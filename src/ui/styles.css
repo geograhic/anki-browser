@@ -782,6 +782,17 @@ h1, h2, h3, h4 { color: var(--ink); line-height: 1.25; font-weight: 650; }
 
 /* --------------------------- Content pages ------------------------------ */
 .content-page { padding: 32px 20px 24px; max-width: 860px; margin: 0 auto; }
+
+/* When renderSubmit mounts the live form (after sign-in), it appends a
+ * #submit-app container outside the prerendered .content-page block, so
+ * that block's horizontal padding doesn't reach the form. Give this
+ * container the same column width + gutter so the form, "Sign in" card and
+ * "My submissions" list align with the rest of the page. */
+#submit-app {
+  max-width: 860px;
+  margin: 24px auto 0;
+  padding: 0 20px;
+}
 .container .content-page,
 main > .container .content-page { padding-left: 0; padding-right: 0; }
 main > .container > .content-page { }
