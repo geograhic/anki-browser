@@ -215,12 +215,11 @@ export function langSwitchHref(links, pageKey, lang) {
   const raw = links.__raw ?? links;
   const next = otherLang(lang);
   const key = pageKey in LANG_TWIN ? pageKey : 'home';
-  let targetKey;
-  if (next === 'zh') {
-    targetKey = LANG_TWIN[key] ?? 'zhHome';
-  } else {
-    targetKey = key.startsWith('zh') ? LANG_TWIN[key] ?? 'home' : key;
-  }
+  // Normalise to the English spelling first (`zhFaq` -> `faq`), then flip to the
+  // twin only when the *target* is Chinese. Relying on `pageKey` carrying a `zh`
+  // prefix is wrong for the SPA, whose page keys are always English (`faq`).
+  const baseKey = key.startsWith('zh') ? (LANG_TWIN[key] ?? key) : key;
+  const targetKey = next === 'zh' ? (LANG_TWIN[baseKey] ?? 'zhHome') : baseKey;
   const fn = raw[targetKey] ?? raw.home;
   return fn();
 }

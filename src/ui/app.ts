@@ -59,6 +59,12 @@ export function renderApp(): void {
   const app = document.getElementById('app');
   if (!app) return;
 
+  // Turn a prerendered pathname URL (`/anki-browser/zh/faq/`) into its hash
+  // equivalent (`/anki-browser/#/zh/faq`) the moment the SPA boots, so hash
+  // navigation (including the language switcher) never stacks on top of a
+  // pathname route and language prefixes cannot get stranded in the URL.
+  normalizeUrlToHash();
+
   // Coalesce renders: a language switch fires both the click handler and the
   // hash change, and both must end in exactly one paint.
   let pending: Route | null = null;
@@ -75,22 +81,37 @@ export function renderApp(): void {
     });
   };
 
-  // The switcher is an <a> for crawlers and no-JS visitors. When it points at
-  // the current URL (language-neutral pages), navigation would be a no-op — so
-  // flip the language and repaint here instead.
+  // The switcher is an <a> for crawlers and no-JS visitors. Always persist the
+  // target language FIRST so that the language-neutral URL we navigate to
+  // (#/faq — English has no prefix) resolves through localStorage to English
+  // instead of falling back to the previously saved Chinese choice.
   document.addEventListener('click', (e) => {
     const el = (e.target as HTMLElement)?.closest('.lang-switch') as HTMLElement | null;
     if (!el) return;
+    const next = (el.dataset.langSwitch as Lang) ?? getLang();
+    setLang(next);
     const href = el.getAttribute('href') ?? '';
     if (href === location.pathname + location.hash) {
+      // Language-neutral page (deck / study / …): re-render in place.
       e.preventDefault();
-      setLang((el.dataset.langSwitch as Lang) ?? getLang());
       schedule(currentRoute());
     }
-    // Otherwise let the browser follow the twin link; the router repaints.
+    // Otherwise let the browser follow the twin link (hash or full path);
+    // the router repaints and reads the language we just saved.
   });
 
   startRouter((route) => schedule(route));
+}
+
+function normalizeUrlToHash(): void {
+  if (location.hash.startsWith('#/')) return; // already hash-routed
+  const baseRaw = ((import.meta as any).env?.BASE_URL as string) || '/anki-browser/';
+  const base = baseRaw.replace(/\/+$/, '');
+  const rest = location.pathname.startsWith(base)
+    ? location.pathname.slice(base.length)
+    : location.pathname;
+  const segs = rest.split('/').filter(Boolean);
+  history.replaceState(null, '', `${base}/#/${segs.join('/')}`);
 }
 
 async function render(route: Route, app: HTMLElement): Promise<void> {
