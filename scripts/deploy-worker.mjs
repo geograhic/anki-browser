@@ -92,8 +92,6 @@ async function cf(path, init = {}) {
 }
 
 const secrets = {
-  GITHUB_CLIENT_ID: requiredEnv('GITHUB_CLIENT_ID'),
-  GITHUB_CLIENT_SECRET: requiredEnv('GITHUB_CLIENT_SECRET'),
   BOT_TOKEN: requiredEnv('BOT_TOKEN'),
   SESSION_SECRET: requiredEnv('SESSION_SECRET'),
   ADMIN_LOGINS: requiredEnv('ADMIN_LOGINS'),
@@ -101,27 +99,32 @@ const secrets = {
   SUBMISSIONS_REPO: process.env.SUBMISSIONS_REPO || 'geograhic/anki-browser-submissions',
   MAIN_REPO: process.env.MAIN_REPO || 'geograhic/anki-browser',
 };
+// OAuth is optional: without client_id/secret the Worker's /oauth/login
+// degrades to `not_configured` (handleOauthLogin checks for a falsy value).
+// This lets us deploy everything else first and just re-run this script with
+// the two OAuth vars once the GitHub OAuth App exists.
+if (process.env.GITHUB_CLIENT_ID) secrets.GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+if (process.env.GITHUB_CLIENT_SECRET) secrets.GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 
-const metadata = {
-  main_module: undefined, // classic script, not an ES module
-  bindings: Object.entries(secrets).map(([name, text]) => ({ type: 'secret_text', name, text })),
-  compatibility_date: '2024-09-01',
-};
-
-console.log('uploading worker…');
-const form = new FormData();
-form.append(
-  'metadata',
-  new Blob([JSON.stringify(metadata)], { type: 'application/json' }),
-);
-form.append('script', new Blob([bundled], { type: 'application/javascript+module' }), 'api.js');
-
+// Classic Service Worker → upload as the raw script body (NOT multipart,
+// which the API parses as ES-module and rejects with error 10021).
+console.log('uploading worker (classic, raw body)…');
 await cf(`/accounts/${CF_ACCOUNT_ID}/workers/scripts/${SCRIPT_NAME}`, {
   method: 'PUT',
-  headers: { Authorization: `Bearer ${CF_API_TOKEN}` },
-  body: form,
+  headers: { 'Content-Type': 'application/javascript' },
+  body: bundled,
 });
 console.log('worker uploaded.');
+
+console.log('setting secrets…');
+for (const [name, text] of Object.entries(secrets)) {
+  await cf(`/accounts/${CF_ACCOUNT_ID}/workers/scripts/${SCRIPT_NAME}/secrets`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, text, type: 'secret_text' }),
+  });
+}
+console.log('secrets set:', Object.keys(secrets).join(', '));
 
 console.log('ensuring route…');
 // Idempotent: delete any existing route for this pattern, then create it.
