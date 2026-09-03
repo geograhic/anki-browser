@@ -1,0 +1,38 @@
+name: remind-token-expiry
+
+# Self-contained expiry reminder for the BOT_TOKEN GitHub PAT that powers the
+# anki-browser-api Worker. Runs on a schedule inside GitHub itself — no AI
+# agent, no external service — so the owner is notified on GitHub no matter
+# which tool they use to develop the site.
+#
+# Expiry date: repository variable BOT_TOKEN_EXPIRY (YYYY-MM-DD), defaulting to
+# the hard-coded date below. After rotating the token, update the variable at
+# Settings → Secrets and variables → Actions → Variables.
+
+on:
+  schedule:
+    # Every Monday 09:00 UTC — inside the 60-day window that still catches
+    # the owner with plenty of time to rotate.
+    - cron: '0 9 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check expiry and open/update reminder issue
+        run: node .github/scripts/remind-token-expiry.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: geograhic
+          REPO: anki-browser
+          # Read the owner-maintained expiry from repo variables; fall back to
+          # the current token's known expiry (2027-07-14).
+          EXPIRY: ${{ vars.BOT_TOKEN_EXPIRY }}
