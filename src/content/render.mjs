@@ -721,6 +721,31 @@ export function jsonLdSite(lang = 'en') {
 }
 
 /**
+ * WebSite-level node — declared once on the home page so search engines can
+ * identify the site as a whole, attach sitelinks search, and bind every
+ * WebPage's `isPartOf`/`publisher` to one canonical site identity via @id.
+ *
+ * @param {string} [lang]
+ */
+export function jsonLdWebSite(lang = 'en') {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': SITE_URL + '/#website',
+    name: SITE_TITLE,
+    alternateName: 'Anki Browser by Endril',
+    url: SITE_URL + '/',
+    description: SITE_DESCRIPTION,
+    inLanguage: normalizeLang(lang),
+    publisher: { '@id': OWNER_URL + '#organization' },
+    potentialAction: {
+      '@type': 'UseAction',
+      target: SITE_URL + '/',
+    },
+  };
+}
+
+/**
  * Organization / ContactPoint — the entity that owns the site.
  * Included on legal pages so the publisher is unambiguous to search engines
  * and generative engines (GEO).

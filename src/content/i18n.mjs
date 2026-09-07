@@ -298,6 +298,9 @@ const en = {
     openInNewTab: 'opens in a new tab',
   },
   meta: {
+    homeTitle: 'Anki Browser — Open, Browse & Review .apkg / .colpkg Online',
+    homeDesc:
+      'Free online .apkg / .colpkg viewer: open, browse and review Anki decks in your browser — no registration, no Anki software needed. SM-2 spaced-repetition scheduler, media and cloze support, 100% local. Your data never leaves your device.',
     faqTitle: 'FAQ — Anki Browser',
     faqDesc:
       'Answers to the questions people ask about Anki Browser: privacy, supported file types, the SM-2 scheduler, mobile support, and how to share your own deck.',
@@ -594,6 +597,9 @@ const zh = {
     openInNewTab: '在新标签页打开',
   },
   meta: {
+    homeTitle: 'Anki Browser — 在浏览器中打开、浏览并复习 .apkg / .colpkg 卡组',
+    homeDesc:
+      '免费 .apkg / .colpkg 在线查看器：在浏览器中直接打开、浏览并复习 Anki 卡组——无需注册、无需安装 Anki 软件。SM-2 间隔重复调度、支持图片音频与挖空填空，100% 本地解析，文件绝不上传。',
     faqTitle: '常见问题 — Anki Browser',
     faqDesc:
       '关于 Anki Browser 的常见疑问解答：隐私与本地解析、支持的文件格式、SM-2 复习调度、手机是否可用，以及如何分享自己的卡组。',

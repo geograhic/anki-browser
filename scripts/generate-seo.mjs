@@ -37,6 +37,7 @@ import {
   htmlLang,
   ogLocales,
   jsonLdSite,
+  jsonLdWebSite,
   jsonLdDeck,
   jsonLdFaq,
   jsonLdOrganization,
@@ -212,8 +213,11 @@ function chrome(key, lang) {
  * @param {string} p.key route key (also the meta.i18n prefix, e.g. meta.faqTitle)
  * @param {(lang: string, links: object) => string} p.body page body builder
  * @param {(lang: string, canonical: string) => object[]} [p.jsonLd]
+ * @param {(lang: string) => object[]} [p.extraLd] extra JSON-LD nodes prepended
+ *   to the page's @graph — used to attach site-level nodes (WebSite,
+ *   WebApplication) once on the home page instead of every page.
  */
-function emitMirroredPage({ key, body, jsonLd }) {
+function emitMirroredPage({ key, body, jsonLd, extraLd }) {
   const path = CANONICAL_PATH[key];
   for (const lang of ['en', 'zh']) {
     const norm = normalizeLang(lang);
@@ -232,6 +236,7 @@ function emitMirroredPage({ key, body, jsonLd }) {
 
     const faqs = key === 'faq' ? faqContent(norm).faq : undefined;
     const ld = [
+      ...(extraLd ? extraLd(norm) : []),
       ...(jsonLd ? jsonLd(norm, canonical) : []),
       jsonLdWebPage({
         name: t(norm, `meta.${key}Title`),
@@ -280,6 +285,10 @@ emitMirroredPage({
       lang,
       galleryHtml: decksGalleryHtml(decks, links, { lang, shareCard: true }),
     }),
+  // Home page is the canonical site identity: declare WebSite (with @id so
+  // every WebPage's isPartOf can resolve here) and WebApplication once here
+  // instead of duplicating it on every page.
+  extraLd: (lang) => [jsonLdWebSite(lang), jsonLdSite(lang)],
 });
 
 emitMirroredPage({
@@ -427,7 +436,11 @@ const today = new Date().toISOString().slice(0, 10);
 
 /** @type {{loc:string, lastmod?:string, priority:string, alt?:{en:string,zh:string}}[]} */
 const urls = [];
+// Viewer landing pages are emitted separately below with priority 0.8; skip
+// them in the mirrored loop to avoid duplicate <url> entries with stale priority.
+const SITEMAP_SKIP = new Set(['apkgViewer', 'colpkgViewer']);
 for (const [key, path] of Object.entries(CANONICAL_PATH)) {
+  if (SITEMAP_SKIP.has(key)) continue;
   const priority = key === 'home' ? '1.0' : key === 'submit' ? '0.8' : '0.7';
   urls.push({
     loc: SITE_URL + path,
