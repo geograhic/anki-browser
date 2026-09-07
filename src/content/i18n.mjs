@@ -368,8 +368,9 @@ const zh = {
     name: { en: '英文', zh: '中文' },
   },
   hero: {
-    title: '在浏览器里打开、浏览并复习 .apkg / .colpkg 卡组',
-    tagline: '无需安装 Anki、无需注册——直接在浏览器里浏览和复习 Anki 卡组。文件只在你的设备上解析，绝不上传。',
+    title: '在浏览器里在线打开、查看 .apkg / .colpkg Anki 卡组，无需安装 Anki',
+    tagline:
+      '在线打开 .apkg / .colpkg 文件：无需安装 Anki 软件、无需注册——直接在浏览器里查看和复习 Anki 卡组。文件只在你的设备上本地解析，绝不上传。',
     ctaOpen: '打开 .apkg / .colpkg 文件',
     ctaHow: '如何运作',
     note: '无需 Anki 软件 · 无需注册 · 不上传——你的文件在本地解析，永远不会离开设备。',

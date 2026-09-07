@@ -608,6 +608,11 @@ export function deckArticleHtml(deck, mdHtml, links = seoLinks, lang = 'en') {
 
 export function heroHtml(links = seoLinks, lang = 'en') {
   lang = normalizeLang(lang);
+  // zh 版把英文 "APKG viewer / COLPKG viewer" 替换为中文搜索关键词友好的
+  // 锚文本，这样 /zh/ 页面在百度/Bing 中文索引里能命中".apkg 在线查看"/
+  // ".colpkg 浏览器"这类高频查询；en 版保持英文锚文本不动。
+  const apkgLabel = lang === 'zh' ? '.apkg 在线查看' : 'APKG viewer';
+  const colpkgLabel = lang === 'zh' ? '.colpkg 浏览器' : 'COLPKG viewer';
   return `
   <section class="hero"><div class="container">
     <h1>${escapeHtml(t(lang, 'hero.title'))}</h1>
@@ -619,9 +624,9 @@ export function heroHtml(links = seoLinks, lang = 'en') {
     <p class="hero-note">${escapeHtml(t(lang, 'hero.note'))}</p>
     <p class="hero-tools">${escapeHtml(t(lang, 'hero.tools'))} <a href="${escapeAttr(
       links.apkgViewer(),
-    )}">APKG viewer</a> &middot; <a href="${escapeAttr(links.colpkgViewer())}">COLPKG viewer</a> &middot; <a href="${escapeAttr(
-      links.submit(),
-    )}">${escapeHtml(t(lang, 'nav.share'))}</a></p>
+    )}">${escapeHtml(apkgLabel)}</a> &middot; <a href="${escapeAttr(links.colpkgViewer())}">${escapeHtml(
+      colpkgLabel,
+    )}</a> &middot; <a href="${escapeAttr(links.submit())}">${escapeHtml(t(lang, 'nav.share'))}</a></p>
   </div></section>`;
 }
 
@@ -873,6 +878,13 @@ export function viewerBodyHtml({ fmt, lang = 'en', links = seoLinks }) {
   const c = viewerContent(fmt, lang);
   const other = fmt === 'apkg' ? 'colpkg' : 'apkg';
   const otherKey = other === 'apkg' ? 'apkgViewer' : 'colpkgViewer';
+  // 与 heroHtml 同样的中英文锚文本切换
+  const apkgLabel = lang === 'zh' ? '.apkg 在线查看' : 'APKG viewer';
+  const colpkgLabel = lang === 'zh' ? '.colpkg 浏览器' : 'COLPKG viewer';
+  const otherLabel =
+    other === 'apkg'
+      ? (lang === 'zh' ? '.apkg 在线查看' : 'APKG viewer')
+      : (lang === 'zh' ? '.colpkg 浏览器' : 'COLPKG viewer');
   const afterLead = `
     <div class="hero-actions">
       <a class="btn btn-primary" href="${escapeAttr(links.open())}">${escapeHtml(c.ctaLabel)}</a>
@@ -883,15 +895,15 @@ export function viewerBodyHtml({ fmt, lang = 'en', links = seoLinks }) {
     <p class="hero-note">${escapeHtml(c.note)}</p>
     <p class="hero-tools">${escapeHtml(t(lang, 'hero.tools'))} <a href="${escapeAttr(
       links.apkgViewer(),
-    )}">APKG viewer</a> &middot; <a href="${escapeAttr(
+    )}">${escapeHtml(apkgLabel)}</a> &middot; <a href="${escapeAttr(
       links.colpkgViewer(),
-    )}">COLPKG viewer</a> &middot; <a href="${escapeAttr(links.submit())}">${escapeHtml(
+    )}">${escapeHtml(colpkgLabel)}</a> &middot; <a href="${escapeAttr(links.submit())}">${escapeHtml(
       t(lang, 'nav.share'),
     )}</a></p>`;
   const afterBody = `
     <p class="muted" style="margin-top:18px">
       ${escapeHtml(lang === 'zh' ? '想打开另一种格式？' : 'Looking for the other format?')}
-      <a href="${escapeAttr(links[otherKey]())}">${other.toUpperCase()} viewer</a>
+      <a href="${escapeAttr(links[otherKey]())}">${escapeHtml(otherLabel)}</a>
     </p>`;
   return contentPageHtml(c, { links, lang, backKey: 'home', afterLead, afterBody });
 }
